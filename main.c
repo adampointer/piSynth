@@ -3,16 +3,17 @@
 #include <alsa/asoundlib.h>
 #include <math.h>
 
-#define POLY     10
-#define GAIN     5000.0
-#define BUFSIZE  512
-#define SEQ_NAME "piSynth"
+#define POLY       10
+#define GAIN       5000.0
+#define BUFSIZE    512
+#define SEQ_NAME   "piSynth"
+#define SAMPLE_RATE 44100.0
 
 snd_seq_t *seq_handle;
 snd_pcm_t *playback_handle;
 short     *buffer;
 double    phi[POLY], phi_mod[POLY], pitch, modulation, velocity[POLY], attack, decay, sustain, release, env_time[POLY],
-          env_level[POLY];
+          env_level[POLY], two_pi, harmonic_const, period;
 int       harmonic, subharmonic, transpose, note[POLY], gate[POLY], note_active[POLY], rate;
 
 
@@ -130,13 +131,13 @@ int midi_callback() {
         switch(ev->type) {
 
             case SND_SEQ_EVENT_PITCHBEND:
-                pitch = (double)ev->data.control.value / 8192.0;
+                pitch = (double) ev->data.control.value / 8192.0;
                 break;
 
             case SND_SEQ_EVENT_CONTROLLER:
 
                 if(ev->data.control.param == 1) {
-                    modulation = (double)ev->data.control.value / 10.0;
+                    modulation = (double) ev->data.control.value / 10.0;
                 }
                 break;
 
@@ -189,28 +190,30 @@ int playback_callback(snd_pcm_sframes_t nframes) {
     for(l2 = 0; l2 < POLY; l2++) {
 
         if(note_active[l2]) {
-            f1        = 8.176 * exp((double)(transpose + note[l2] - 2) * log(2.0) / 12.0);
-            f2        = 8.176 * exp((double)(transpose + note[l2]) * log(2.0) / 12.0);
-            f3        = 8.176 * exp((double)(transpose + note[l2] + 2) * log(2.0) / 12.0);
+            f1        = 8.176 * exp((double) (transpose + note[l2] - 2) * harmonic_const);
+            f2        = 8.176 * exp((double) (transpose + note[l2]) * harmonic_const);
+            f3        = 8.176 * exp((double) (transpose + note[l2] + 2) * harmonic_const);
             freq_note = (pitch > 0) ? f2 + (f3-f2) * pitch : f2 + (f2 - f1) * pitch;
             dphi      = M_PI * freq_note / 22050.0;
-            dphi_mod  = dphi * (double)harmonic / (double)subharmonic;
+            dphi_mod  = dphi * (double) harmonic / (double) subharmonic;
 
             for(l1 = 0; l1 < nframes; l1++) {
                 phi[l2]     += dphi;
                 phi_mod[l2] += dphi_mod;
 
-                if(phi[l2] > 2.0 * M_PI) {
-                    phi[l2] -= 2.0 * M_PI;
+                if(phi[l2] > two_pi) {
+                    phi[l2] -= two_pi;
                 }
 
-                if(phi_mod[l2] > 2.0 * M_PI) {
-                    phi_mod[l2] -= 2.0 * M_PI;
+                if(phi_mod[l2] > two_pi) {
+                    phi_mod[l2] -= two_pi;
                 }
-                sound = GAIN * envelope(&note_active[l2], gate[l2], &env_level[l2], env_time[l2], attack, decay,
-                    sustain, release) * velocity[l2] * sin(phi[l2] + modulation * sin(phi_mod[l2]));
+                sound = GAIN * 
+                    envelope(&note_active[l2], gate[l2], &env_level[l2], env_time[l2], attack, decay, sustain, release) * 
+                    velocity[l2] * 
+                    sin(phi[l2] + modulation * sin(phi_mod[l2]));
 
-                env_time[l2]       += 1.0 / 44100.0;
+                env_time[l2]       += period;
                 buffer[2 * l1]     += sound;
                 buffer[2 * l1 + 1] += sound;
             }
@@ -227,22 +230,25 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "pisynth <device> <FM> <harmonic> <subharmonic> <transpose> <a> <d> <s> <r>\n");
         exit(1);
     }
-    modulation  = atof(argv[2]);
-    harmonic    = atoi(argv[3]);
-    subharmonic = atoi(argv[4]);
-    transpose   = atoi(argv[5]);
-    attack      = atof(argv[6]);
-    decay       = atof(argv[7]);
-    sustain     = atof(argv[8]);
-    release     = atof(argv[9]);
-    pitch       = 0;
-    buffer      = (short *)malloc(2* sizeof(short) * BUFSIZE);
+    modulation     = atof(argv[2]);
+    harmonic       = atoi(argv[3]);
+    subharmonic    = atoi(argv[4]);
+    transpose      = atoi(argv[5]);
+    attack         = atof(argv[6]);
+    decay          = atof(argv[7]);
+    sustain        = atof(argv[8]);
+    release        = atof(argv[9]);
+    pitch          = 0;
+    buffer         = (short *) malloc(2* sizeof(short) * BUFSIZE);
+    two_pi         = M_PI * 2;
+    harmonic_const = (log(2.0) / 12.0);
+    period         = 1 / SAMPLE_RATE; 
     
     playback_handle = open_pcm(argv[1]);
     seq_handle      = open_seq();
     seq_nfds        = snd_seq_poll_descriptors_count(seq_handle, POLLIN);
     nfds            = snd_pcm_poll_descriptors_count(playback_handle);
-    pfds            = (struct pollfd *)alloca(sizeof(struct pollfd) * (seq_nfds + nfds));
+    pfds            = (struct pollfd *) alloca(sizeof(struct pollfd) * (seq_nfds + nfds));
 
     snd_seq_poll_descriptors(seq_handle, pfds, seq_nfds, POLLIN);
     snd_pcm_poll_descriptors(playback_handle, pfds + seq_nfds, nfds);

@@ -1,0 +1,4 @@
+*.o
+pi-synth
+callgrind.*
+cachegrind.*
