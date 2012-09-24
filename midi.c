@@ -20,7 +20,7 @@ snd_seq_t *open_seq() {
 
 int midi_callback() {
     snd_seq_event_t *ev;
-    int             l1;
+    int             n;
 
     do {
         snd_seq_event_input(seq_handle, &ev);
@@ -40,12 +40,14 @@ int midi_callback() {
 
             case SND_SEQ_EVENT_NOTEON:
                 
-                for(l1 = 0; l1 < POLY; l1++) {
+                for(n = 0; n < POLY; n++) {
 
-                    if(!note_active[l1]) {
-                        note[l1]        = ev->data.note.note;
-                        velocity[l1]    = ev->data.note.velocity / 127.0;
-                        note_active[l1] = 1;
+                    if(!note_active[n]) {
+                        note[n]        = ev->data.note.note;
+                        velocity[n]    = ev->data.note.velocity / 127.0;
+                        note_active[n] = 1;
+                        env_time[n]    = 0;
+                        gate[n]        = 1;
                         break;
                     }
                 }
@@ -53,10 +55,12 @@ int midi_callback() {
 
             case SND_SEQ_EVENT_NOTEOFF:
 
-                for(l1 = 0; l1 < POLY; l1++) {
+                for(n = 0; n < POLY; n++) {
 
-                    if(note_active[l1] && (note[l1] == ev->data.note.note)) {
-                        note_active[l1] = 0;
+                    if(gate[n] && note_active[n] && (note[n] == ev->data.note.note)) {
+                        note_active[n] = 0;
+                        env_time[n]    = 0;
+                        gate[n]        = 0;
                     }
                 }
                 break;

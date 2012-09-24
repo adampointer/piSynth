@@ -41,7 +41,7 @@ int playback_callback(snd_pcm_sframes_t nframes) {
 	    phase = 0;
 
 	    for(n = 0; n < nframes; n++) {
-	      sound = GAIN * velocity[poly] * sin(phase);
+	      sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) * GAIN * velocity[poly] * sin(phase);
 	      buffer[2 * n] += sound;
 	      buffer[2 * n + 1] += sound;
 	      phase += phase_increment;
@@ -54,4 +54,29 @@ int playback_callback(snd_pcm_sframes_t nframes) {
     }
     
     return snd_pcm_writei(playback_handle, buffer, nframes);
+}
+
+double envelope(int *note_active, int gate, double *env_level, double t, double attack, double decay, double sustain, double release) {
+
+    if(gate) {
+	
+        if(t > attack + decay) {
+	    return(*env_level = sustain);
+	}
+	
+        if(t > attack) {
+	    return (*env_level = 1.0 - (1.0 - sustain) * (t - attack) / decay);
+	}
+        return(*env_level = t / attack);
+    } else {
+	
+        if(t > release) {
+	    
+            if (note_active) {
+		*note_active = 0;
+	    }
+            return(*env_level = 0);
+        }
+        return(*env_level * (1.0 - t / release));
+    }
 }

@@ -1,3 +1,6 @@
+#ifndef MAIN_H
+#define MAIN_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <alsa/asoundlib.h>
@@ -15,5 +18,8 @@
 snd_seq_t *seq_handle;
 snd_pcm_t *playback_handle;
 short     *buffer;
-double    pitch, modulation, velocity[POLY], env_level[POLY], two_pi, period, harmonic_const;
-int       harmonic, subharmonic, note[POLY], note_active[POLY], rate;
+double    pitch, velocity[POLY], env_level[POLY], env_time[POLY], two_pi, modulation, harmonic_const,
+          attack, decay, sustain, release;
+int       note[POLY], note_active[POLY], rate, gate[POLY];
+
+#endif
