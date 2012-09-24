@@ -2,3 +2,6 @@
 pi-synth
 callgrind.*
 cachegrind.*
+*~
+*.kdev4
+core

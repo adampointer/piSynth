@@ -2,7 +2,7 @@ RM=rm
 CC=gcc
 CFLAGS=-c -Wall
 LDFLAGS=-lasound -lm
-SOURCES=main.c
+SOURCES=main.c synth.c midi.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=pi-synth
 
