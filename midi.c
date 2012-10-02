@@ -57,8 +57,7 @@ int midi_callback() {
 
                 for(n = 0; n < POLY; n++) {
 
-                    if(gate[n] && note_active[n] && (note[n] == ev->data.note.note)) {
-                        note_active[n] = 0;
+                    if(gate[n] && note_active[n] && (note[n] == ev->data.note.note)) { 
                         env_time[n]    = 0;
                         gate[n]        = 0;
                     }
