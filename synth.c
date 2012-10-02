@@ -29,7 +29,7 @@ snd_pcm_t *open_pcm(char *pcm_name) {
 
 int playback_callback(snd_pcm_sframes_t nframes) {
     int    poly, n;
-    double freq, phase, phase_increment, sound;
+    double freq, phase_increment, sound;
   
     memset(buffer, 0, nframes * 4);
 
@@ -38,16 +38,19 @@ int playback_callback(snd_pcm_sframes_t nframes) {
         if(note_active[poly]) {
             freq = 8.176 * exp((double) note[poly] * harmonic_const);
 	    phase_increment = (two_pi / rate) * freq;
-	    phase = 0;
+            
+            if(!phase[poly]) {
+                phase[poly] = 0.0;
+            }
 
 	    for(n = 0; n < nframes; n++) {
-	      sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) * GAIN * velocity[poly] * sin(phase);
-	      buffer[2 * n] += sound;
+	      sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) * GAIN * velocity[poly] * sin(phase[poly]);
+              buffer[2 * n] += sound;
 	      buffer[2 * n + 1] += sound;
-	      phase += phase_increment;
+	      phase[poly] += phase_increment;
 	      
-	      if(phase >= two_pi) {
-		phase -= two_pi;
+	      if(phase[poly] >= two_pi) {
+		phase[poly] -= two_pi;
 	      }
 	    }
 	}
@@ -57,8 +60,8 @@ int playback_callback(snd_pcm_sframes_t nframes) {
 }
 
 double envelope(int *note_active, int gate, double *env_level, double t, double attack, double decay, double sustain, double release) {
-
-    if(gate) {
+    return 1.0;
+    /*if(gate) {
 	
         if(t > attack + decay) {
 	    return(*env_level = sustain);
@@ -78,5 +81,5 @@ double envelope(int *note_active, int gate, double *env_level, double t, double 
             return(*env_level = 0);
         }
         return(*env_level * (1.0 - t / release));
-    }
+    }*/
 }

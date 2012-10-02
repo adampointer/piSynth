@@ -9,7 +9,7 @@
 #include "synth.h"
 #include "midi.h"
 
-#define POLY       2
+#define POLY       8
 #define GAIN       5000.0
 #define BUFSIZE    512 
 #define SEQ_NAME   "piSynth"
@@ -18,7 +18,7 @@
 snd_seq_t *seq_handle;
 snd_pcm_t *playback_handle;
 short     *buffer;
-double    pitch, velocity[POLY], env_level[POLY], env_time[POLY], two_pi, modulation, harmonic_const,
+double    pitch, velocity[POLY], env_level[POLY], env_time[POLY], phase[POLY], two_pi, modulation, harmonic_const,
           attack, decay, sustain, release;
 int       note[POLY], note_active[POLY], rate, gate[POLY];
 

@@ -1,7 +1,7 @@
 #include "main.h"
 
 int main(int argc, char *argv[]) {
-    int    nfds, seq_nfds, n, frames_written;
+    int    nfds, seq_nfds, n;
     struct pollfd *pfds;
     
     if(argc < 2) {
