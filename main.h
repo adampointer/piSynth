@@ -18,7 +18,7 @@
 snd_seq_t *seq_handle;
 snd_pcm_t *playback_handle;
 short     *buffer;
-double    pitch, velocity[POLY], env_level[POLY], env_time[POLY], phase[POLY], two_pi, modulation, harmonic_const,
+double    pitch, velocity[POLY], env_level[POLY], env_time[POLY], mod_phase[POLY], car_phase[POLY], two_pi, modulation, harmonic_const,
           attack, decay, sustain, release;
 int       note[POLY], note_active[POLY], rate, gate[POLY];
 

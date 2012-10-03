@@ -29,32 +29,43 @@ snd_pcm_t *open_pcm(char *pcm_name) {
 
 int playback_callback(snd_pcm_sframes_t nframes) {
     int    poly, n;
-    double freq, phase_increment, sound;
+    double mod, mod_amp, freq, freq_rad, mod_phase_increment, car_phase_increment, sound;
   
+    mod = 7.8;
+    freq_rad = two_pi / rate;
     memset(buffer, 0, nframes * 4);
 
     for(poly = 0; poly < POLY; poly++) {
 
         if(note_active[poly]) {
             freq = 8.176 * exp((double) note[poly] * harmonic_const);
-	    phase_increment = (two_pi / rate) * freq;
-            
-            if(!phase[poly]) {
-                phase[poly] = 0.0;
+    	    mod_phase_increment = freq_rad * (freq * mod);
+            mod_amp = 100;
+
+            if(!mod_phase[poly] || !car_phase[poly]) {
+                mod_phase[poly] = 0.0;
+                car_phase[poly] = 0.0;
             }
 
-	    for(n = 0; n < nframes; n++) {
-	      sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) * GAIN * velocity[poly] * sin(phase[poly]);
-              env_time[poly] += 1.0 / rate;
-              buffer[2 * n] += sound;
-	      buffer[2 * n + 1] += sound;
-	      phase[poly] += phase_increment;
-	      
-	      if(phase[poly] >= two_pi) {
-		phase[poly] -= two_pi;
-	      }
+	        for(n = 0; n < nframes; n++) {
+	            sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) * 
+                    GAIN * velocity[poly] * sin(car_phase[poly]);
+                env_time[poly] += 1.0 / rate;
+                buffer[2 * n] += sound;
+	            buffer[2 * n + 1] += sound;
+	            car_phase_increment = freq_rad * (freq + (mod_amp * sin(mod_phase[poly])));
+                car_phase[poly] += car_phase_increment;
+
+                if(car_phase[poly] >= two_pi) {
+                    car_phase[poly] -= two_pi;
+                }
+                mod_phase[poly] += mod_phase_increment; 
+	            
+                if(mod_phase[poly] >= two_pi) {
+                    mod_phase[poly] -= two_pi;
+                }
+            }
 	    }
-	}
     }
     
     return snd_pcm_writei(playback_handle, buffer, nframes);
