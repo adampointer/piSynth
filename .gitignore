@@ -5,3 +5,4 @@ cachegrind.*
 *~
 *.kdev4
 core
+node_modules
