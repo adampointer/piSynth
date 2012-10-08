@@ -3,8 +3,8 @@
         {
             "target_name": "oscillator",
             "sources": ["main.cpp"],
-            "ldflags": ["-lm", "-lasound"],
-            "cxxflags": ["-fpermissive"]
+            "libraries": ["-lpthread", "-lm", "-lasound"],
+            "cflags": ["-fpermissive"]
         }
     ]
 }
