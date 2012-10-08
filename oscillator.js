@@ -1,4 +1,4 @@
-var osc = require('./build/Debug/oscillator.node');
+var osc = require('./build/Release/oscillator.node');
 
 function Oscillator(pcm_device) { 
     var self = this;
@@ -18,20 +18,20 @@ function Oscillator(pcm_device) {
         process.exit(0);
     });
     
-    this._initHardware(pcm_device, function(err){
+    this._initHardware(pcm_device, function(err) {
         console.log('Initialised');
     });
 };
 
 Oscillator.prototype._initHardware = function(pcm_name, callback) {
     console.log('Initialising PCM device...');
-    osc.initPcm('hw:0', function(err){
+    osc.initPcm('hw:0', function(err) {
 
         if(err) {
             return callback(err);
         } else {
             console.log('Starting loop');
-            osc.startPcm(function(err){
+            osc.startPcm(function(err) {
                 
                 if(err) {
                     return callback(err);
@@ -57,7 +57,7 @@ Oscillator.prototype.onNoteOff = function(note) {
 };
 
 Oscillator.prototype._shutdown = function() {
-    //osc.closePcm();
+    osc.closePcm();
     setTimeout(function(){
         process.exit(0);
     }, 1000);

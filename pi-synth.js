@@ -8,6 +8,7 @@ handler =    new midiHandler(input);
 oscillator = new Oscillator();
 
 handler.on('midi.event_received.note_on', function(data){
+    console.log(data.data);
     oscillator.onNoteOn(data.data, data.velocity);
 });
 handler.on('midi.event_received.note_off', function(data){

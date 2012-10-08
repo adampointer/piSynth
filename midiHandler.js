@@ -25,8 +25,8 @@ function MidiHandler(input) {
     });
 
     this._bindMidiEvents();
-
     this.input.openVirtualPort("piSynth");
+    console.log('MIDI initialised');
 };
 
 util.inherits(MidiHandler, events.EventEmitter);
