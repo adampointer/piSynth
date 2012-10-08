@@ -29,9 +29,8 @@ snd_pcm_t *open_pcm(char *pcm_name) {
 
 int playback_callback(snd_pcm_sframes_t nframes) {
     int    poly, n;
-    double mod, mod_amp, freq, freq_rad, mod_phase_increment, car_phase_increment, sound;
+    double freq, freq_rad, mod_phase_increment, car_phase_increment, sound;
   
-    mod = 7.8;
     freq_rad = two_pi / rate;
     memset(buffer, 0, nframes * 4);
 
@@ -39,8 +38,7 @@ int playback_callback(snd_pcm_sframes_t nframes) {
 
         if(note_active[poly]) {
             freq = 8.176 * exp((double) note[poly] * harmonic_const);
-    	    mod_phase_increment = freq_rad * (freq * mod);
-            mod_amp = 100;
+    	    mod_phase_increment = freq_rad * (freq * cm_ratio);
 
             if(!mod_phase[poly] || !car_phase[poly]) {
                 mod_phase[poly] = 0.0;
@@ -49,11 +47,12 @@ int playback_callback(snd_pcm_sframes_t nframes) {
 
 	        for(n = 0; n < nframes; n++) {
 	            sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) * 
-                    GAIN * velocity[poly] * sin(car_phase[poly]);
+                    GAIN * velocity[poly] * square_wave(car_phase[poly]);
+                fprintf(stdout, "%f\n", sound);
                 env_time[poly] += 1.0 / rate;
                 buffer[2 * n] += sound;
 	            buffer[2 * n + 1] += sound;
-	            car_phase_increment = freq_rad * (freq + (mod_amp * sin(mod_phase[poly])));
+	            car_phase_increment = freq_rad * (freq + (mod_amp * fast_sin(mod_phase[poly])));
                 car_phase[poly] += car_phase_increment;
 
                 if(car_phase[poly] >= two_pi) {
@@ -93,5 +92,42 @@ double envelope(int *note_active, int gate, double *env_level, double t, double 
             return(*env_level = 0);
         }
         return(*env_level * (1.0 - t / release));
+    }
+}
+
+double fast_sin(double x) {
+    const double a = -0.40319426317E-08;
+    const double b = 0.21683205691E+03;
+    const double c = 0.28463350538E-04;
+    const double d = -0.30774648337E-02;
+
+    double y;
+    bool invert = false;
+
+    if(x > 2048) {
+        invert = true;
+        x -= 2048;
+    }
+
+    if(x > 1024) {
+        x = 2048 - x;
+    }
+    y = (a + x) / (b + c * x * x) + d * x;
+
+    if(invert) {
+        return -y;
+    } else {
+        return y;
+    }
+}
+
+double square_wave(double x) {
+    double y;
+    y = sin(x);
+    
+    if(y > 0) {
+        return 1.0;
+    } else {
+        return -1.0;
     }
 }

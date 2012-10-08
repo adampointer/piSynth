@@ -35,4 +35,8 @@ int playback_callback(snd_pcm_sframes_t nframes);
  */
 double envelope(int *note_active, int gate, double *env_level, double t, double attack, double decay, double sustain, double release);
 
+
+double fast_sin(double x);
+
+double square_wave(double x);
 #endif

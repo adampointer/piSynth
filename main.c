@@ -8,6 +8,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "pisynth <device>\n");
         exit(1);
     }
+
     pitch          = 0;
     buffer         = (short *) malloc(2* sizeof(short) * BUFSIZE);
     two_pi         = M_PI * 2;
@@ -19,10 +20,12 @@ int main(int argc, char *argv[]) {
     pfds            = (struct pollfd *) alloca(sizeof(struct pollfd) * (seq_nfds + nfds));
     harmonic_const  = (log(2.0) / 12.0);
     
-    attack  = 0.01;
-    decay   = 0.8;
-    sustain = 0.1;
-    release = 0.2;
+    attack   = 0.01;
+    decay    = 0.8;
+    sustain  = 0.1;
+    release  = 0.2;
+    mod_amp  = 100;
+    cm_ratio = 7.5;
 
     snd_seq_poll_descriptors(seq_handle, pfds, seq_nfds, POLLIN);
     snd_pcm_poll_descriptors(playback_handle, pfds + seq_nfds, nfds);
