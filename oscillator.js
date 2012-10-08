@@ -1,28 +1,66 @@
-var Oscillator = require('./build/Debug/oscillator.node');
+var osc = require('./build/Debug/oscillator.node');
 
-console.log('Initialising PCM device...');
-Oscillator.initPcm('hw:0', function(err){
+function Oscillator(pcm_device) { 
+    var self = this;
+    var hadSigInt = false;
+    process.on('SIGINT', function() {
+        if (hadSigInt) {
+            process.exit(0);
+        } else {
+            hadSigInt = true;
+            console.log('Shutting down PCM...');
+            self._shutdown();
+        }
+    });
+    
+    process.on('SIGTERM', function() {
+        console.log('Killing process...');
+        process.exit(0);
+    });
+    
+    this._initHardware(pcm_device, function(err){
+        console.log('Initialised');
+    });
+};
 
-    if(err) {
-        console.log(err);
-    } else {
-        console.log('Starting loop');
-        Oscillator.startPcm(function(err){
-            
-            if(err) {
-                console.log(err);
-            } else {
-                console.log('Listening for events');
-                Oscillator.noteOn(72, 127.0, function(err) {
-                    setTimeout(function(){
-                        Oscillator.noteOff(72, function(err) {
-                            console.log('off');
-                        });
-                    }, 1000);
-                });
-            }
-        });
-    }
-    //console.log('Closing PCM device');
-    //Oscillator.closePcm();
-});
+Oscillator.prototype._initHardware = function(pcm_name, callback) {
+    console.log('Initialising PCM device...');
+    osc.initPcm('hw:0', function(err){
+
+        if(err) {
+            return callback(err);
+        } else {
+            console.log('Starting loop');
+            osc.startPcm(function(err){
+                
+                if(err) {
+                    return callback(err);
+                } else {
+                    console.log('Listening for events...');
+                    return callback();
+                }
+            });
+        }
+    });
+};
+
+Oscillator.prototype.onNoteOn = function(note, velocity) {
+    osc.noteOn(note, velocity, function() {
+        
+    });
+};
+
+Oscillator.prototype.onNoteOff = function(note) {
+    osc.noteOff(note, function() {
+        
+    });
+};
+
+Oscillator.prototype._shutdown = function() {
+    //osc.closePcm();
+    setTimeout(function(){
+        process.exit(0);
+    }, 1000);
+};
+
+module.exports = Oscillator;
