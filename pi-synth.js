@@ -7,7 +7,7 @@ var Server      = require('./server');
 var input      = new midi.input();
 var handler    = new midiHandler(input);
 var oscillator = new Oscillator();
-var appserver  = new Server();
+var appserver  = new Server(oscillator);
 
 appserver.start();
 

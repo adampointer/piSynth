@@ -1,4 +1,4 @@
-var osc    = require('./build/Debug/oscillator.node');
+var osc    = require('./build/Release/oscillator.node');
 var events = require('events');
 var util   = require('util');
 
