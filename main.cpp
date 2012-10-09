@@ -157,6 +157,7 @@ void* start_loop() {
             }
         }
     }
+
     pthread_exit(0);
     return dummy;
 }
@@ -167,7 +168,7 @@ Handle<Value> InitPcm(const Arguments& args) {
     snd_pcm_sw_params_t *sw_params;
     const unsigned argc = 1;
     rate = 44100;
-fprintf(stderr,"starting init\n");
+
     if (args.Length() < 2) {
         ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
         return scope.Close(Undefined());
@@ -180,81 +181,81 @@ fprintf(stderr,"starting init\n");
 
     Local<Function> cb = Local<Function>::Cast(args[1]);
     std::string pcm_name(*String::AsciiValue(args[0]));
- fprintf(stderr,"starting init 1\n");
+
     if(snd_pcm_open(&playback_handle, pcm_name.c_str(), SND_PCM_STREAM_PLAYBACK, 0) < 0) { 
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Cannot open PCM device")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
     snd_pcm_hw_params_alloca(&hw_params);
- fprintf(stderr,"starting init 2\n");
+
     if(snd_pcm_hw_params_any(playback_handle, hw_params) < 0) {
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Cannot configure PCM device")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
- fprintf(stderr,"starting init 3\n");
+
     if(snd_pcm_hw_params_set_access(playback_handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0) {
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting access")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
- fprintf(stderr,"starting init 4\n");
+
     if(snd_pcm_hw_params_set_format(playback_handle, hw_params, SND_PCM_FORMAT_S16_LE) < 0) {
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting format")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
- fprintf(stderr,"starting init 5\n");
+
     if(snd_pcm_hw_params_set_rate_near(playback_handle, hw_params, &rate, 0) < 0) {
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting rate")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
- fprintf(stderr,"starting init 6\n");
+
     if(snd_pcm_hw_params_set_channels(playback_handle, hw_params, 2) < 0) {
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting channels")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
- fprintf(stderr,"starting init 7\n");
+
     if(snd_pcm_hw_params_set_periods(playback_handle, hw_params, 2, 0) < 0) { 
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting periods")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
- fprintf(stderr,"starting init 8\n");
+
     if(snd_pcm_hw_params_set_period_size(playback_handle, hw_params, BUFSIZE, 0) < 0) { 
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting period size")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
- fprintf(stderr,"starting init 9\n");
+
     if(snd_pcm_hw_params(playback_handle, hw_params) < 0) { 
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting hardware params")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
     snd_pcm_sw_params_alloca(&sw_params);
- fprintf(stderr,"starting init 10\n");
+
     if(snd_pcm_sw_params_current(playback_handle, sw_params) < 0) { 
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting current software params")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
- fprintf(stderr,"starting init 11\n");
+
     if(snd_pcm_sw_params_set_avail_min(playback_handle, sw_params, BUFSIZE) < 0) { 
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting available min")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
- fprintf(stderr,"starting init 12\n");
+
     if(snd_pcm_sw_params(playback_handle, sw_params) < 0) { 
         Local<Value> argv[argc] = { Local<Value>::New(String::New("Error setting software params")) };
         cb->Call(Context::GetCurrent()->Global(), argc, argv);
         return scope.Close(Undefined());
     }
-   fprintf(stderr, "Init done\n"); 
+
     Local<Value> argv[argc] = { Local<Value>::New(Number::New(0)) };
     cb->Call(Context::GetCurrent()->Global(), argc, argv);
     return scope.Close(Undefined());
@@ -281,6 +282,8 @@ Handle<Value> StartPcm(const Arguments& args) {
     release  = 0.2;
     cm_ratio = 7.5;
     mod_amp  = 100;
+
+    run_worker = true;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);

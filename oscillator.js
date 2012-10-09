@@ -1,6 +1,9 @@
-var osc = require('./build/Release/oscillator.node');
+var osc    = require('./build/Debug/oscillator.node');
+var events = require('events');
+var util   = require('util');
 
-function Oscillator(pcm_device) { 
+function Oscillator(pcm_device) {
+    events.EventEmitter.call(this);
     var self = this;
     var hadSigInt = false;
     process.on('SIGINT', function() {
@@ -22,6 +25,8 @@ function Oscillator(pcm_device) {
         console.log('Initialised');
     });
 };
+
+util.inherits(Oscillator, events.EventEmitter);
 
 Oscillator.prototype._initHardware = function(pcm_name, callback) {
     console.log('Initialising PCM device...');
@@ -45,15 +50,27 @@ Oscillator.prototype._initHardware = function(pcm_name, callback) {
 };
 
 Oscillator.prototype.onNoteOn = function(note, velocity) {
+    var self = this;
     osc.noteOn(note, velocity, function() {
-        
+        self.emit('osc.note_played');
     });
 };
 
 Oscillator.prototype.onNoteOff = function(note) {
+    var self = this;
     osc.noteOff(note, function() {
-        
+        self.emit('osc.note_stopped');
     });
+};
+
+Oscillator.prototype.setEnvelope = function(envelope) {
+    
+    if(envelope.attack, envelope.decay, envelope.sustain, envelope.release) {
+        osc.setEnvelope(envelope.attack, envelope.decay, envelope.sustain, envelope.release);
+        this.emit('osc.envelope_changed');
+    } else {
+        console.log('Invalid value passed as envelope');
+    }
 };
 
 Oscillator.prototype._shutdown = function() {

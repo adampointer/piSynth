@@ -1,14 +1,17 @@
 var midi        = require('midi');
+
 var midiHandler = require('./midiHandler');
 var Oscillator  = require('./oscillator');
+var Server      = require('./server');
 
-var input = new midi.input();
+var input      = new midi.input();
+var handler    = new midiHandler(input);
+var oscillator = new Oscillator();
+var appserver  = new Server();
 
-handler =    new midiHandler(input);
-oscillator = new Oscillator();
+appserver.start();
 
 handler.on('midi.event_received.note_on', function(data){
-    console.log(data.data);
     oscillator.onNoteOn(data.data, data.velocity);
 });
 handler.on('midi.event_received.note_off', function(data){
