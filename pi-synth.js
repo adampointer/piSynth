@@ -1,5 +1,5 @@
 var midi        = require('midi');
-
+var util        = require('util');
 var midiHandler = require('./midiHandler');
 var Oscillator  = require('./oscillator');
 var Server      = require('./server');

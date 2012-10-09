@@ -387,9 +387,34 @@ Handle<Value> ClosePcm(const Arguments& args) {
     return scope.Close(Undefined());
 }
 
-Handle<Value> SetEnvelope(const Arguments& args) {
+Handle<Value> GetEnvelope(const Arguments& args) {
     HandleScope scope;
-    const unsigned argc = 1;    
+    const unsigned argc = 1;
+
+    if (args.Length() < 1) {
+        ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
+        return scope.Close(Undefined());
+    }
+
+    if (!args[0]->IsFunction()) {
+        ThrowException(Exception::TypeError(String::New("Argument should be a function")));
+        return scope.Close(Undefined());
+    }
+     
+    Local<Function> cb = Local<Function>::Cast(args[0]);
+    Local<Object> envelope = Object::New();
+    envelope->Set(String::New("attack"), Number::New(attack));
+    envelope->Set(String::New("decay"), Number::New(decay));
+    envelope->Set(String::New("sustain"), Number::New(sustain));
+    envelope->Set(String::New("release"), Number::New(release));
+    Local<Value> argv[argc] = { envelope };
+    cb->Call(Context::GetCurrent()->Global(), argc, argv);
+    
+    return scope.Close(Undefined());
+}
+
+Handle<Value> SetEnvelope(const Arguments& args) {
+    HandleScope scope;    
 
     if (args.Length() < 4) {
         ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
@@ -416,6 +441,7 @@ void Init(Handle<Object> target) {
     target->Set(String::NewSymbol("noteOn"), FunctionTemplate::New(NoteOn)->GetFunction());
     target->Set(String::NewSymbol("noteOff"), FunctionTemplate::New(NoteOff)->GetFunction());
     target->Set(String::NewSymbol("setEnvelope"), FunctionTemplate::New(SetEnvelope)->GetFunction());
+    target->Set(String::NewSymbol("getEnvelope"), FunctionTemplate::New(GetEnvelope)->GetFunction());
 }
 
 NODE_MODULE(oscillator, Init)

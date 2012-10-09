@@ -73,6 +73,12 @@ Oscillator.prototype.setEnvelope = function(envelope) {
     }
 };
 
+Oscillator.prototype.getEnvelope = function(callback) {
+    osc.getEnvelope(function(envelope) {
+        callback(envelope);
+    });    
+};
+
 Oscillator.prototype._shutdown = function() {
     osc.closePcm();
     setTimeout(function(){
