@@ -2,13 +2,22 @@ var util       = require('util');
 var events     = require('events');
 var _          = require('underscore');
 
+/**
+ * Class wrapping basic MIDI functions and binding to
+ * events
+ *
+ * @param {Object} input
+ *
+ * @constructor
+ */
 function MidiHandler(input) {
     events.EventEmitter.call(this);
 
     var self      = this;
     this.input    = input;
-    var hadSigInt = false;
 
+    // Ensure clean shutdown
+    var hadSigInt = false;
     process.on('SIGINT', function() {
         if (hadSigInt) {
             process.exit(0);
@@ -18,24 +27,37 @@ function MidiHandler(input) {
             self._shutdown();
         }
     });
-    
     process.on('SIGTERM', function() {
         console.log('Killing process...');
         process.exit(0);
     });
 
+    // Start listening
     this._bindMidiEvents();
     this.input.openVirtualPort("piSynth");
     console.log('MIDI initialised');
 };
 
+/**
+ * Events mixin
+ */
 util.inherits(MidiHandler, events.EventEmitter);
 
+/**
+ * Map MIDI events to our internal events
+ *
+ * @type {Object}
+ */
 MidiHandler.prototype.eventMap = {
     144: 'note_on',
     128: 'note_off'
 };
 
+/**
+ * Handler triggered when a MIDI event is received
+ *
+ * @param {Object} message
+ */
 MidiHandler.prototype.onMessage = function(message) {
     
     if(_.isArray(message) && message.length == 3) {
@@ -57,6 +79,11 @@ MidiHandler.prototype.onMessage = function(message) {
     }
 };
 
+/**
+ * Bind external events to internal handlers
+ *
+ * @private
+ */
 MidiHandler.prototype._bindMidiEvents = function() {   
     var self = this;
     this.input.on('message', function(deltaTime, message) {
@@ -64,6 +91,11 @@ MidiHandler.prototype._bindMidiEvents = function() {
     });
 };
 
+/**
+ * Clean shutdown
+ *
+ * @private
+ */
 MidiHandler.prototype._shutdown = function() {
     this.input.closePort();
     setTimeout(function(){

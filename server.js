@@ -4,6 +4,14 @@ var express = require('express');
 
 var app = express();
 
+/**
+ * Simple Express based HTTP server for modifiying
+ * synth params
+ *
+ * @param {Object} oscillator
+ *
+ * @constructor
+ */
 function AppServer(oscillator) {
     events.EventEmitter.call(this);
     var self = this;
@@ -16,10 +24,33 @@ function AppServer(oscillator) {
     });
 };
 
+/**
+ * Events mixin
+ */
 util.inherits(AppServer, events.EventEmitter);
 
+/**
+ * Listen for connections on this port
+ *
+ * @type {Number}
+ */
 AppServer.prototype.PORT = 8989;
 
+/**
+ * Start the server
+ */
+AppServer.prototype.start = function() {
+    app.listen(this.PORT);
+};
+
+/**
+ * Initialise routes
+ *
+ * @param {Function} callback
+ * @return {Function}
+ *
+ * @private
+ */
 AppServer.prototype._initRoutes = function(callback) {
     var self = this;
     app.use(express.static(__dirname + '/public'));
@@ -35,6 +66,14 @@ AppServer.prototype._initRoutes = function(callback) {
     return callback();
 };
 
+/**
+ * Get envelope parameters
+ *
+ * @param {Object} request
+ * @param {Object} response
+ *
+ * @private
+ */
 AppServer.prototype._getEnvelope = function(request, response) {
     this.oscillator.getEnvelope(function(envelope) {
         response.set('Content-Type', 'application/json');
@@ -42,15 +81,19 @@ AppServer.prototype._getEnvelope = function(request, response) {
     });        
 };
 
+/**
+ * Set envelope parameters
+ *
+ * @param {Object} request
+ * @param {Object} response
+ *
+ * @private
+ */
 AppServer.prototype._setEnvelope = function(request, response) {
     var data = request.body;
     this.oscillator.setEnvelope(data);
     response.set('Content-Type', 'application/json');
     response.send({"ok": true});
-};
-
-AppServer.prototype.start = function() {
-    app.listen(this.PORT);
 };
 
 module.exports = AppServer;

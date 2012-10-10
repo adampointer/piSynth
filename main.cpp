@@ -48,29 +48,12 @@ double envelope(int *note_active, int gate, double *env_level, double t, double 
 }
 
 double fast_sin(double x) {
-    const double a = -0.40319426317E-08;
-    const double b = 0.21683205691E+03;
-    const double c = 0.28463350538E-04;
-    const double d = -0.30774648337E-02;
+    const double B = 4/M_PI;
+    const double C = -4/(M_PI * M_PI);
+    const double P = 0.225;
 
-    double y;
-    bool invert = false;
-
-    if(x > 2048) {
-        invert = true;
-        x -= 2048;
-    }
-
-    if(x > 1024) {
-        x = 2048 - x;
-    }
-    y = (a + x) / (b + c * x * x) + d * x;
-
-    if(invert) {
-        return -y;
-    } else {
-        return y;
-    }
+    double y = B * x + C * x * abs(x);
+    return P * (y * abs(y) - y) + y;
 }
 
 double square_wave(double x) {
