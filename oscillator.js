@@ -1,6 +1,7 @@
 var osc    = require('./build/Release/oscillator.node');
 var events = require('events');
 var util   = require('util');
+var _      = require('underscore');
 
 function Oscillator(pcm_device) {
     events.EventEmitter.call(this);
@@ -65,8 +66,13 @@ Oscillator.prototype.onNoteOff = function(note) {
 
 Oscillator.prototype.setEnvelope = function(envelope) {
     
-    if(envelope.attack, envelope.decay, envelope.sustain, envelope.release) {
-        osc.setEnvelope(envelope.attack, envelope.decay, envelope.sustain, envelope.release);
+    if(envelope.attack && envelope.decay && envelope.sustain && envelope.release) {
+        osc.setEnvelope(
+            parseFloat(envelope.attack), 
+            parseFloat(envelope.decay), 
+            parseFloat(envelope.sustain), 
+            parseFloat(envelope.release)
+        );
         this.emit('osc.envelope_changed');
     } else {
         console.log('Invalid value passed as envelope');

@@ -17,7 +17,6 @@ EnvelopeControl.prototype._render = function() {
         'stop': function(event, ui) {
             var slider = $(ui.handle).parent();
             self._data[slider.attr('id')] = ui.value;
-            //console.log(ui.handle);
             self._setValue();
         }
     });
@@ -47,7 +46,7 @@ EnvelopeControl.prototype._setValue = function() {
     $.ajax({
         type: 'PUT',
         url: '/envelope',
-        data: JSON.stringify(this.data),
+        data: this._data,
         success: function(data) {
         },
         dataType: 'json'

@@ -7,6 +7,9 @@ var app = express();
 function AppServer(oscillator) {
     events.EventEmitter.call(this);
     var self = this;
+    app.configure(function(){
+          app.use(express.bodyParser());
+    });
     this.oscillator = oscillator;
     this._initRoutes(function() {
         console.log('AppServer listening on ' + self.PORT); 
@@ -41,7 +44,7 @@ AppServer.prototype._getEnvelope = function(request, response) {
 
 AppServer.prototype._setEnvelope = function(request, response) {
     var data = request.body;
-    this.oscillator.setEnvelope(envelope);
+    this.oscillator.setEnvelope(data);
     response.set('Content-Type', 'application/json');
     response.send({"ok": true});
 };
