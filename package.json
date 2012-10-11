@@ -1,0 +1,30 @@
+{
+  "name": "pisynth",
+  "version": "0.1.0",
+  "description": "FM synthesiser for RaspberryPi",
+  "main": "pi-synth.js",
+  "dependencies": {
+    "underscore": "~1.4.1",
+    "midi": "~0.6.0",
+    "express": "~3.0.0rc4",
+    "events": "~0.5.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "node-gyp rebuild",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/adampointer/piSynth.git"
+  },
+  "keywords": [
+    "pcm",
+    "alsa",
+    "midi"
+  ],
+  "author": "Adam Pointer",
+  "license": "MIT",
+  "gypfile": true
+}

@@ -2,7 +2,7 @@
     "targets": [
         {
             "target_name": "oscillator",
-            "sources": ["main.cpp"],
+            "sources": ["src/main.cpp"],
             "libraries": ["-lpthread", "-lm", "-lasound"],
             "cflags": ["-fpermissive"]
         }
