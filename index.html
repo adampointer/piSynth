@@ -31,32 +31,30 @@
         <hr>
 
         <section id="main_content">
-          <h3>Welcome to GitHub Pages.</h3>
+          <h2>What is it?</h2>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>This is an FM synthesiser with a browser front-end for fiddling about with and tweaking all the synthesis parameters. I am using it on a Raspberry Pi but it could be used on any platform that can feasibly compile and run it.</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+<h2>Node.js? Why?</h2>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<p>Actually Node.js is a good fit for this project, aside from the fact that it is super-trendy at the moment. It handles events very well and a MIDI input to PCM output with an HTTP interface is largely about events. A key is pressed on the keyboard triggering a MIDI event, this needs to be handled and trigger a note to be played. An envelope is modified in the HTTP interface firing a PUT request to the server, again, this is an event. Although anything involving hardware is written in C/C++, node.js is perfect for quickly and elegantly glueing everything together. And it is fun.</p>
 
-<h3>Designer Templates</h3>
+<h2>Is it ready for use?</h2>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>No. It plays basic sounds and you can change the ADSR envelope. Performance is poor on the Raspberry Pi but compiling the PCM module to use the FPU should help. I want to implement some kind of LUT/simple caching for the waveform generation. That will also help massively. Also I have loads more params that I want to be controlled from the browser and then I want to be able to load/save settings.</p>
 
-<h3>Rather Drive Stick?</h3>
+<h2>How to use?</h2>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>Compile the PCM modules with node-gyp, run the synth, then connect to the hardware.</p>
 
-<h3>Authors and Contributors</h3>
+<p><code>node-gyp configure build</code>
+<code>node pi-synth.js</code>
+<code>aconnect -i</code>
+<code>aconnect -o</code></p>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p>Make a note of the id of your MIDI keybaoard (real or virtual) and the id of the synth and glue them together.</p>
 
-<h3>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<p><code>aconnect &lt;IN&gt; &lt;OUT&gt;</code> </p>
         </section>
 
         <footer>
