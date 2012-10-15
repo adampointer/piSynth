@@ -22,6 +22,8 @@ double       pitch, velocity[POLY], env_level[POLY], env_time[POLY], mod_phase[P
 int          note[POLY], note_active[POLY], gate[POLY];
 unsigned int rate;
 bool         run_worker;
+double       (*mod_func)(double);
+double       (*car_func)(double);
 
 double envelope(int *note_active, int gate, double *env_level, double t, double attack, double decay, double sustain, double release) {
     
@@ -108,12 +110,12 @@ int playback_callback(snd_pcm_sframes_t nframes) {
 
             for(n = 0; n < nframes; n++) {
                 sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) *
-                    GAIN * velocity[poly] * sawtooth_wave(car_phase[poly]);
+                    GAIN * velocity[poly] * (*car_func)(car_phase[poly]);
                 //fprintf(stdout, "%f\n", sound);
                 env_time[poly] += 1.0 / rate;
                 buffer[2 * n] += sound;
                 buffer[2 * n + 1] += sound;
-                car_phase_increment = freq_rad * (freq + (mod_amp * fast_sin(mod_phase[poly])));
+                car_phase_increment = freq_rad * (freq + (mod_amp * (*mod_func)(mod_phase[poly])));
                 car_phase[poly] += car_phase_increment;
 
                 if(car_phase[poly] >= M_TWO_PI) {
@@ -287,6 +289,9 @@ Handle<Value> StartPcm(const Arguments& args) {
     mod_amp  = 100;
 
     run_worker = true;
+
+    car_func = &fast_sin;
+    mod_func = &fast_sin;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
