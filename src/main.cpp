@@ -109,7 +109,7 @@ int playback_callback(snd_pcm_sframes_t nframes) {
             for(n = 0; n < nframes; n++) {
                 sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) *
                     GAIN * velocity[poly] * sawtooth_wave(car_phase[poly]);
-                fprintf(stdout, "%f\n", sound);
+                //fprintf(stdout, "%f\n", sound);
                 env_time[poly] += 1.0 / rate;
                 buffer[2 * n] += sound;
                 buffer[2 * n + 1] += sound;
