@@ -11,6 +11,11 @@
 #define POLY     8
 #define GAIN     500.0
 
+#define TRIANGLE 1
+#define SQUARE   2
+#define SAWTOOTH 3
+#define SINE     4
+
 #define M_TWO_PI   6.2831853071796
 
 using namespace v8;
@@ -25,6 +30,9 @@ bool         run_worker;
 double       (*mod_func_1)(double);
 double       (*mod_func_2)(double);
 double       (*car_func)(double);
+unsigned int mod_func_1_type, mod_func_2_type, car_func_type;
+
+typedef double (*func)(double);
 
 double envelope(int *note_active, int gate, double *env_level, double t, double attack, double decay, double sustain, double release) {
     
@@ -288,16 +296,13 @@ Handle<Value> StartPcm(const Arguments& args) {
     decay      = 0.8;
     sustain    = 0.1;
     release    = 0.2;
-    cm_ratio_1 = 7.5;
-    cm_ratio_2 = 5.0;
-    mod_amp_1  = 100;
-    mod_amp_2  = 100;
+    cm_ratio_1 = cm_ratio_2 = 2.0;
+    mod_amp_1  = mod_amp_2  = 100;
 
     run_worker = true;
 
-    car_func   = &fast_sin;
-    mod_func_1 = &fast_sin;
-    mod_func_2 = &fast_sin;
+    car_func      = mod_func_1      = mod_func_2      = &fast_sin;
+    car_func_type = mod_func_1_type = mod_func_2_type = SINE;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
@@ -448,14 +453,110 @@ Handle<Value> SetEnvelope(const Arguments& args) {
     return scope.Close(Undefined());
 }
 
+func GetFunction(int type) {
+    
+    switch(type) {
+            
+        case SQUARE:
+            return &square_wave;
+
+        case TRIANGLE:
+            return &triangle_wave;
+
+        case SAWTOOTH:
+            return &sawtooth_wave;
+
+        case SINE:
+        default:
+            return &fast_sin;
+    }
+}
+
+Handle<Value> GetModulator(const Arguments& args) {
+    HandleScope scope;
+    const unsigned argc = 1;
+
+    if (args.Length() < 2) {
+        ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
+        return scope.Close(Undefined());
+    }
+
+    if (!args[0]->IsNumber()) {
+        ThrowException(Exception::TypeError(String::New("Argument should be a number")));
+        return scope.Close(Undefined());
+    }
+
+    if (!args[1]->IsFunction()) {
+        ThrowException(Exception::TypeError(String::New("Argument should be a function")));
+        return scope.Close(Undefined());
+    }
+    
+    Local<Function> cb      = Local<Function>::Cast(args[1]);
+    Local<Object> modulator = Object::New();
+    unsigned int mod_number = args[0]->NumberValue();
+
+    if(mod_number == 1) {
+        modulator->Set(String::New("waveform"), Number::New(mod_func_1_type));
+        modulator->Set(String::New("cm_ratio"), Number::New(cm_ratio_1));
+        modulator->Set(String::New("amplitude"), Number::New(mod_amp_1));
+    } else if(mod_number == 2) {
+        modulator->Set(String::New("waveform"), Number::New(mod_func_2_type));
+        modulator->Set(String::New("cm_ratio"), Number::New(cm_ratio_2));
+        modulator->Set(String::New("amplitude"), Number::New(mod_amp_2));
+    } else {
+        ThrowException(Exception::TypeError(String::New("Should be a valid modulator number (1 or 2)")));
+        return scope.Close(Undefined());
+    }
+    Local<Value> argv[argc] = { modulator };
+    cb->Call(Context::GetCurrent()->Global(), argc, argv);
+    return scope.Close(Undefined());
+}
+
+Handle<Value> SetModulator(const Arguments& args) {
+    HandleScope scope;    
+    unsigned int mod_number;
+
+    if (args.Length() < 4) {
+        ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
+        return scope.Close(Undefined());
+    }
+
+    if (!args[0]->IsNumber() || !args[1]->IsString() || !args[2]->IsNumber() || !args[3]->IsNumber()) {
+        ThrowException(Exception::TypeError(String::New("Invalid argument types")));
+        return scope.Close(Undefined());
+    }
+
+    mod_number         = args[0]->NumberValue();
+    unsigned int type  = args[1]->NumberValue();
+
+    if(mod_number == 1) {
+        mod_func_1       = GetFunction(type);
+        mod_func_1_type  = type;
+        cm_ratio_1       = args[2]->NumberValue();
+        mod_amp_1        = args[3]->NumberValue();
+    } else if(mod_number == 2) {
+        mod_func_2       = GetFunction(type);
+        mod_func_2_type  = type;
+        cm_ratio_2       = args[2]->NumberValue();
+        mod_amp_2        = args[3]->NumberValue();
+    } else {
+        ThrowException(Exception::TypeError(String::New("Should be a valid modulator number (1 or 2)")));
+        return scope.Close(Undefined());
+    }
+
+    return scope.Close(Undefined());
+}
+
 void Init(Handle<Object> target) {
     target->Set(String::NewSymbol("initPcm"), FunctionTemplate::New(InitPcm)->GetFunction());
     target->Set(String::NewSymbol("startPcm"), FunctionTemplate::New(StartPcm)->GetFunction());
     target->Set(String::NewSymbol("closePcm"), FunctionTemplate::New(ClosePcm)->GetFunction());
     target->Set(String::NewSymbol("noteOn"), FunctionTemplate::New(NoteOn)->GetFunction());
     target->Set(String::NewSymbol("noteOff"), FunctionTemplate::New(NoteOff)->GetFunction());
-    target->Set(String::NewSymbol("setEnvelope"), FunctionTemplate::New(SetEnvelope)->GetFunction());
     target->Set(String::NewSymbol("getEnvelope"), FunctionTemplate::New(GetEnvelope)->GetFunction());
+    target->Set(String::NewSymbol("setEnvelope"), FunctionTemplate::New(SetEnvelope)->GetFunction());
+    target->Set(String::NewSymbol("getModulator"), FunctionTemplate::New(GetModulator)->GetFunction());
+    target->Set(String::NewSymbol("setModulator"), FunctionTemplate::New(SetModulator)->GetFunction());
 }
 
 NODE_MODULE(oscillator, Init)
