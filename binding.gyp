@@ -11,10 +11,7 @@
                 "-lasound"
             ],
             "cflags": [
-                "-fpermissive",
-                "-march=armv6",
-                "-mfpu=vfp",
-                "-mfloat-abi=hard"
+                "-fpermissive"
             ],
             "defines": [
                 "ARCH='<(target_arch)'",
@@ -37,6 +34,12 @@
                                         "-mfpu=vfp",
                                         "-mfloat-abi=hard"
                                     ]
+                                }
+                            ],
+                            [
+                                "target_arch=='x64'",
+                                {
+                                    "cflags":[]
                                 }
                             ]
                         ]

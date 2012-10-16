@@ -17,12 +17,13 @@ using namespace v8;
 
 snd_pcm_t    *playback_handle;
 short        *buffer;
-double       pitch, velocity[POLY], env_level[POLY], env_time[POLY], mod_phase[POLY], car_phase[POLY], modulation,
-             attack, decay, sustain, release, cm_ratio, mod_amp;
+double       pitch, velocity[POLY], env_level[POLY], env_time[POLY], mod_phase_1[POLY], mod_phase_2[POLY], car_phase[POLY],
+             attack, decay, sustain, release, cm_ratio_1, cm_ratio_2, mod_amp_1, mod_amp_2;
 int          note[POLY], note_active[POLY], gate[POLY];
 unsigned int rate;
 bool         run_worker;
-double       (*mod_func)(double);
+double       (*mod_func_1)(double);
+double       (*mod_func_2)(double);
 double       (*car_func)(double);
 
 double envelope(int *note_active, int gate, double *env_level, double t, double attack, double decay, double sustain, double release) {
@@ -91,7 +92,8 @@ double sawtooth_wave(double x) {
 
 int playback_callback(snd_pcm_sframes_t nframes) {
     int    poly, n;
-    double constant, freq, freq_rad, mod_phase_increment, car_phase_increment, sound;
+    double constant, freq, freq_rad, mod_phase_1_increment, mod_phase_2_increment, car_phase_increment,
+           sound, mod_value_1, mod_value_2;
   
     constant = (log(2.0) / 12.0);
     freq_rad = M_TWO_PI / rate;
@@ -100,32 +102,33 @@ int playback_callback(snd_pcm_sframes_t nframes) {
     for(poly = 0; poly < POLY; poly++) {
 
         if(note_active[poly]) {
-            freq = 8.176 * exp((double) note[poly] * constant);
-            mod_phase_increment = freq_rad * (freq * cm_ratio);
+            freq                  = 8.176 * exp((double) note[poly] * constant);
+            mod_phase_1_increment = freq_rad * (freq * cm_ratio_1);
+            mod_phase_2_increment = freq_rad * (freq * cm_ratio_2);
 
-            if(!mod_phase[poly] || !car_phase[poly]) {
-                mod_phase[poly] = 0.0;
-                car_phase[poly] = 0.0;
-            }
+            if(!car_phase[poly]) car_phase[poly]     = 0.0;
+            if(!mod_phase_1[poly]) mod_phase_1[poly] = 0.0;
+            if(!mod_phase_2[poly]) mod_phase_2[poly] = 0.0;
 
             for(n = 0; n < nframes; n++) {
                 sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) *
-                    GAIN * velocity[poly] * (*car_func)(car_phase[poly]);
-                //fprintf(stdout, "%f\n", sound);
-                env_time[poly] += 1.0 / rate;
-                buffer[2 * n] += sound;
-                buffer[2 * n + 1] += sound;
-                car_phase_increment = freq_rad * (freq + (mod_amp * (*mod_func)(mod_phase[poly])));
-                car_phase[poly] += car_phase_increment;
+                        GAIN * velocity[poly] * (*car_func)(car_phase[poly]); 
+                
+                env_time[poly]       += 1.0 / rate;
+                buffer[2 * n]        += sound;
+                buffer[2 * n + 1]    += sound;
+                mod_value_1           = mod_amp_1 * (*mod_func_1)(mod_phase_1[poly]);
+                mod_value_2           = mod_amp_2 * (*mod_func_2)(mod_phase_2[poly]);
+                car_phase_increment   = freq_rad * (freq + mod_value_1 + mod_value_2);
+                
+                car_phase[poly]      += car_phase_increment;
+                if(car_phase[poly]   >= M_TWO_PI) car_phase[poly] -= M_TWO_PI;
 
-                if(car_phase[poly] >= M_TWO_PI) {
-                    car_phase[poly] -= M_TWO_PI;
-                }
-                mod_phase[poly] += mod_phase_increment; 
-
-                if(mod_phase[poly] >= M_TWO_PI) {
-                    mod_phase[poly] -= M_TWO_PI;
-                }
+                mod_phase_1[poly]    += mod_phase_1_increment; 
+                if(mod_phase_1[poly] >= M_TWO_PI)  mod_phase_1[poly] -= M_TWO_PI;
+            
+                mod_phase_2[poly]    += mod_phase_2_increment; 
+                if(mod_phase_2[poly] >= M_TWO_PI)  mod_phase_2[poly] -= M_TWO_PI;
             }
         }
     }
@@ -279,19 +282,22 @@ Handle<Value> StartPcm(const Arguments& args) {
 
     Local<Function> cb = Local<Function>::Cast(args[0]);
 
-    pitch    = 0;
-    buffer   = (short *) malloc(2* sizeof(short) * BUFSIZE);
-    attack   = 0.01;
-    decay    = 0.8;
-    sustain  = 0.1;
-    release  = 0.2;
-    cm_ratio = 7.5;
-    mod_amp  = 100;
+    pitch      = 0;
+    buffer     = (short *) malloc(2* sizeof(short) * BUFSIZE);
+    attack     = 0.01;
+    decay      = 0.8;
+    sustain    = 0.1;
+    release    = 0.2;
+    cm_ratio_1 = 7.5;
+    cm_ratio_2 = 5.0;
+    mod_amp_1  = 100;
+    mod_amp_2  = 100;
 
     run_worker = true;
 
-    car_func = &fast_sin;
-    mod_func = &fast_sin;
+    car_func   = &fast_sin;
+    mod_func_1 = &fast_sin;
+    mod_func_2 = &fast_sin;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
