@@ -52,5 +52,3 @@ EnvelopeControl.prototype._setValue = function() {
         dataType: 'json'
     });
 };
-
-var adsr = new EnvelopeControl();
