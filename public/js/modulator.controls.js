@@ -4,8 +4,14 @@ function ModulatorControl(selector) {
     $(function() {
         self.mod_number = self._getModNumber();
         self._render();
+        $(self.selector + ' ' + self.waveformControl).change(function(e) {
+            self._data.waveform = $(this).val();
+            self._setValue();
+        });
     });
 };
+
+ModulatorControl.prototype.waveformControl = '.waveform';
 
 ModulatorControl.prototype.amplitudeControl = '.amplitude';
 
@@ -40,8 +46,12 @@ ModulatorControl.prototype._render = function() {
         if(!error) {
             self._data = data;
             $.each(data, function(key) {
-                $(self.selector + ' .' + key).slider('value', this);
+                
+                if(key != 'waveform') {
+                    $(self.selector + ' .' + key).slider('value', this);
+                }
             });
+            $(self.selector + ' ' + self.waveformControl).val(self._data.waveform); 
         }
     });
 };
