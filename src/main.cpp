@@ -521,7 +521,7 @@ Handle<Value> SetModulator(const Arguments& args) {
         return scope.Close(Undefined());
     }
 
-    if (!args[0]->IsNumber() || !args[1]->IsString() || !args[2]->IsNumber() || !args[3]->IsNumber()) {
+    if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber() || !args[3]->IsNumber()) {
         ThrowException(Exception::TypeError(String::New("Invalid argument types")));
         return scope.Close(Undefined());
     }
