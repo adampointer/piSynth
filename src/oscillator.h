@@ -1,42 +1,44 @@
+/*
+    Copyright (c) 2012 Adam Pointer <adam.pointer@gmx.com>
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use,
+    copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following
+    conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+
 #ifndef OSCILLATOR_H
 #define OSCILLATOR_H
 
 #include <node/node.h>
-#include <alsa/asoundlib.h>
-
-#define BUFSIZE  512
-#define RATE     44100.0
-#define POLY     8
-#define GAIN     500.0
-
-#define TRIANGLE 1
-#define SQUARE   2
-#define SAWTOOTH 3
-#define SINE     4
-
-#define M_TWO_PI   6.2831853071796
 
 using namespace v8;
 
 class Oscillator : public node::ObjectWrap {
 public:
-    struct ADSR {
-        double attack, decay, sustain, release;
-    }
     static void Init(Handle<Object> target);
     
 private:
     Oscillator();
     ~Oscillator();
     
-    static double Envelope(int *note_active, int gate, double *env_level, double t, ADSR envelope);
-    static double FastSine(double x);
-    static double SquareWave(double x);
-    static double TriangleWave(double x);
-    static double SawtoothWave(double x);
-    static int    PlaybackCallback(snd_pcm_sframes_t nframes);
-    static void*  StartLoop();
-
     Handle<Value> InitPcm(const Arguments& args);
     Handle<Value> StartPcm(const Arguments& args);
     Handle<Value> NoteOn(const Arguments& args);
@@ -48,4 +50,4 @@ private:
     Handle<Value> SetModulator(const Arguments& args);
 };
 
-#endif
+#endif //OSCILLATOR_H

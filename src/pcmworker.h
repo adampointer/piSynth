@@ -24,8 +24,43 @@
 */
 
 
-#define BUILDING_NODE_EXTENSION
+#ifndef PCMWORKER_H
+#define PCMWORKER_H
 
-#include "oscillator.h"
+#include <alsa/asoundlib.h>
+#include <math.h>
 
-using namespace v8;
+#include "threadedworker.h"
+
+#define BUFSIZE  512
+#define RATE     44100.0
+#define POLY     8
+#define GAIN     500.0
+
+#define TRIANGLE 1
+#define SQUARE   2
+#define SAWTOOTH 3
+#define SINE     4
+
+#define M_TWO_PI   6.2831853071796
+
+
+class PCMWorker : protected ThreadedWorker::ThreadedWorker
+{
+public:
+    PCMWorker();
+    virtual ~PCMWorker();
+    
+protected:
+    void InternalThreadEntry();
+    
+private:
+    int PlaybackCallback(snd_pcm_sframes_t nframes);
+    double Envelope(int *note_active, int gate, double *env_level, double t, ADSR envelope);
+    double FastSine(double x);
+    double SquareWave(double x);
+    double TriangleWave(double x);
+    double SawtoothWave(double x);
+};
+
+#endif // PCMWORKER_H
