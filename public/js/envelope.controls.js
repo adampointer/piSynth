@@ -34,7 +34,11 @@ EnvelopeControl.prototype._render = function() {
 EnvelopeControl.prototype._getInitialValues = function(callback) {
     $.getJSON('/envelope', function(data) {
         
-        if(data.attack && data.decay && data.sustain && data.release) {
+        if(typeof data.attack != 'undefined' && 
+            typeof data.decay != 'undefined' && 
+            typeof data.sustain != 'undefined' && 
+            typeof data.release != 'undefined') 
+        {
             return callback(null, data);
         } else {
             return callback(new Error('Invalid response'));
@@ -52,5 +56,3 @@ EnvelopeControl.prototype._setValue = function() {
         dataType: 'json'
     });
 };
-
-var adsr = new EnvelopeControl();

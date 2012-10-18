@@ -7,10 +7,12 @@
         <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css">
         <link rel="stylesheet" type="text/css" href="/css/local.css">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
         <script src="http://code.jquery.com/ui/1.9.0/jquery-ui.js"></script>
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/envelope.controls.js"></script>
+        <script src="/js/modulator.controls.js"></script>
+        <script src="/js/controls.js"></script>
     </head>
     <body>
         <div class="navbar">
@@ -29,7 +31,62 @@
             </div>
             <div class="row">
                 <div class="span4">
-                    <h2>ADSR Envelope</h2>
+                    <h2>Modulator One</h2>
+                </div>
+                <div class="span4">
+                    <h2>Modulator Two</h2>
+                </div>
+                <div class="span4">
+                    <h2>Carrier</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="span4">
+                    <h3>Waveform</h3>
+                    <div id="mod1" class="modulator-control" data-modnumber="1">
+                        <form action="#">
+                            <div>
+                                <label for="waveform-1">Waveform:</label>
+                            </div>
+                            <div>
+                                <select class="waveform" name="waveform-1">
+                                    <option value="1">Triangle</option>
+                                    <option value="2">Square</option>
+                                    <option value="3">Sawtooth</option>
+                                    <option value="4">Sine</option>
+                                </select>
+                            </div>    
+                        </form>
+                        <p>Amplitude</p>
+                        <div class="slider space amplitude" data-parameter="amplitude"></div>
+                        <p>C/M Ratio</p>
+                        <div class="slider space cm_ratio" data-parameter="cm_ratio"></div>
+                    </div>
+                </div>
+                <div class="span4">
+                    <h3>Waveform</h3>
+                    <div id="mod2" class="modulator-control" data-modnumber="2">
+                        <form action="#">
+                            <div>
+                                <label for="waveform-2">Waveform:</label>
+                            </div>
+                            <div>
+                                <select class="waveform" name="waveform-2">
+                                    <option value="1">Triangle</option>
+                                    <option value="2">Square</option>
+                                    <option value="3">Sawtooth</option>
+                                    <option value="4">Sine</option>
+                                </select>
+                            </div>    
+                        </form>
+                        <p>Amplitude</p>
+                        <div class="slider space amplitude" data-parameter="amplitude"></div>
+                        <p>C/M Ratio</p>
+                        <div class="slider space cm_ratio" data-parameter="cm_ratio"></div>
+                    </div>
+                </div>
+                <div class="span4">
+                    <h3>ADSR Envelope</h3>
                     <div class="envelope-control">
                         <div class="slider pull-left space" id="attack"></div>
                         <div class="slider pull-left space" id="decay"></div>

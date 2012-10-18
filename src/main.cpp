@@ -8,39 +8,51 @@
 
 #define BUFSIZE  512
 #define RATE     44100.0
-#define TWO_PI   M_PI * 2
 #define POLY     8
 #define GAIN     500.0
+
+#define TRIANGLE 1
+#define SQUARE   2
+#define SAWTOOTH 3
+#define SINE     4
+
+#define M_TWO_PI   6.2831853071796
 
 using namespace v8;
 
 snd_pcm_t    *playback_handle;
 short        *buffer;
-double       pitch, velocity[POLY], env_level[POLY], env_time[POLY], mod_phase[POLY], car_phase[POLY], modulation,
-             attack, decay, sustain, release, cm_ratio, mod_amp;
+double       pitch, velocity[POLY], env_level[POLY], env_time[POLY], mod_phase_1[POLY], mod_phase_2[POLY], car_phase[POLY],
+             attack, decay, sustain, release, cm_ratio_1, cm_ratio_2, mod_amp_1, mod_amp_2;
 int          note[POLY], note_active[POLY], gate[POLY];
 unsigned int rate;
 bool         run_worker;
+double       (*mod_func_1)(double);
+double       (*mod_func_2)(double);
+double       (*car_func)(double);
+unsigned int mod_func_1_type, mod_func_2_type, car_func_type;
+
+typedef double (*func)(double);
 
 double envelope(int *note_active, int gate, double *env_level, double t, double attack, double decay, double sustain, double release) {
     
     if(gate) {
-	
+
         if(t > attack + decay) {
-	    return(*env_level = sustain);
-	}
-	
+            return(*env_level = sustain);
+        }
+
         if(t > attack) {
-	    return (*env_level = 1.0 - (1.0 - sustain) * (t - attack) / decay);
-	}
+            return (*env_level = 1.0 - (1.0 - sustain) * (t - attack) / decay);
+        }
         return(*env_level = t / attack);
     } else {
-	
+
         if(t > release) {
-	    
+
             if (note_active) {
-		*note_active = 0;
-	    }
+                *note_active = 0;
+            }
             return(*env_level = 0);
         }
         return(*env_level * (1.0 - t / release));
@@ -48,64 +60,85 @@ double envelope(int *note_active, int gate, double *env_level, double t, double 
 }
 
 double fast_sin(double x) {
-    const double B = 4/M_PI;
-    const double C = -4/(M_PI * M_PI);
-    const double P = 0.225;
+    double x2 = x * x;
+    double x4 = x2 * x2;
 
-    double y = B * x + C * x * abs(x);
-    return P * (y * abs(y) - y) + y;
+    double t1  = x * (1.0 - x2 / (2*3));
+    double x5  = x * x4;
+    double t2  = x5 * (1.0 - x2 / (6*7)) / (1.0 * 2 * 3 * 4 * 5);
+    double x9  = x5 * x4;
+    double t3  = x9 * (1.0 - x2 / (10*11)) / (1.0 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
+    double x13 = x9 * x4;
+    double t4  = x13 * (1.0 - x2 / (14 * 15)) / (1.0 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9 * 10 * 11 * 12 * 13);
+
+    double y = t4;
+    y += t3;
+    y += t2;
+    y += t1;
+
+    return y;
 }
 
 double square_wave(double x) {
-    double y;
-    y = sin(x);
     
-    if(y > 0) {
+    if(x > M_PI) {
         return 1.0;
     } else {
         return -1.0;
     }
 }
 
+double triangle_wave(double x) {
+    double f = x / M_TWO_PI;
+    return abs(4 * (f - floor(f + 0.5))) - 1.0;
+}
+
+double sawtooth_wave(double x) {
+    double f = x / M_TWO_PI;
+    return  2.0 * (f - floor(f)) - 1.0;
+}
+
 int playback_callback(snd_pcm_sframes_t nframes) {
     int    poly, n;
-    double constant, freq, freq_rad, mod_phase_increment, car_phase_increment, sound;
+    double constant, freq, freq_rad, mod_phase_1_increment, mod_phase_2_increment, car_phase_increment,
+           sound, mod_value_1, mod_value_2;
   
     constant = (log(2.0) / 12.0);
-    freq_rad = TWO_PI / rate;
+    freq_rad = M_TWO_PI / rate;
     memset(buffer, 0, nframes * 4);
 
     for(poly = 0; poly < POLY; poly++) {
 
         if(note_active[poly]) {
-            freq = 8.176 * exp((double) note[poly] * constant);
-    	    mod_phase_increment = freq_rad * (freq * cm_ratio);
+            freq                  = 8.176 * exp((double) note[poly] * constant);
+            mod_phase_1_increment = freq_rad * (freq * cm_ratio_1);
+            mod_phase_2_increment = freq_rad * (freq * cm_ratio_2);
 
-            if(!mod_phase[poly] || !car_phase[poly]) {
-                mod_phase[poly] = 0.0;
-                car_phase[poly] = 0.0;
+            if(!car_phase[poly]) car_phase[poly]     = 0.0;
+            if(!mod_phase_1[poly]) mod_phase_1[poly] = 0.0;
+            if(!mod_phase_2[poly]) mod_phase_2[poly] = 0.0;
+
+            for(n = 0; n < nframes; n++) {
+                sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) *
+                        GAIN * velocity[poly] * (*car_func)(car_phase[poly]); 
+                
+                env_time[poly]       += 1.0 / rate;
+                buffer[2 * n]        += sound;
+                buffer[2 * n + 1]    += sound;
+                mod_value_1           = mod_amp_1 * (*mod_func_1)(mod_phase_1[poly]);
+                mod_value_2           = mod_amp_2 * (*mod_func_2)(mod_phase_2[poly]);
+                car_phase_increment   = freq_rad * (freq + mod_value_1 + mod_value_2);
+                
+                car_phase[poly]      += car_phase_increment;
+                if(car_phase[poly]   >= M_TWO_PI) car_phase[poly] -= M_TWO_PI;
+
+                mod_phase_1[poly]    += mod_phase_1_increment; 
+                if(mod_phase_1[poly] >= M_TWO_PI)  mod_phase_1[poly] -= M_TWO_PI;
+            
+                mod_phase_2[poly]    += mod_phase_2_increment; 
+                if(mod_phase_2[poly] >= M_TWO_PI)  mod_phase_2[poly] -= M_TWO_PI;
             }
-
-	        for(n = 0; n < nframes; n++) {
-	            sound = envelope(&note_active[poly], gate[poly], &env_level[poly], env_time[poly], attack, decay, sustain, release) * 
-                    GAIN * velocity[poly] * sin(car_phase[poly]);
-                //fprintf(stdout, "%f\n", sound);
-                env_time[poly] += 1.0 / rate;
-                buffer[2 * n] += sound;
-	            buffer[2 * n + 1] += sound;
-	            car_phase_increment = freq_rad * (freq + (mod_amp * sin(mod_phase[poly])));
-                car_phase[poly] += car_phase_increment;
-
-                if(car_phase[poly] >= TWO_PI) {
-                    car_phase[poly] -= TWO_PI;
-                }
-                mod_phase[poly] += mod_phase_increment; 
-	            
-                if(mod_phase[poly] >= TWO_PI) {
-                    mod_phase[poly] -= TWO_PI;
-                }
-            }
-	    }
+        }
     }
     
     return snd_pcm_writei(playback_handle, buffer, nframes);
@@ -131,7 +164,7 @@ void* start_loop() {
             for(n = 0; n < nfds; n++) {
 
                 if(pfds[n].revents > 0) {
-		    
+
                     if(playback_callback(BUFSIZE) < BUFSIZE) { 
                         fprintf(stderr, "---BUFFER UNDERRUN---\n");
                         snd_pcm_prepare(playback_handle);
@@ -257,16 +290,19 @@ Handle<Value> StartPcm(const Arguments& args) {
 
     Local<Function> cb = Local<Function>::Cast(args[0]);
 
-    pitch    = 0;
-    buffer   = (short *) malloc(2* sizeof(short) * BUFSIZE);
-    attack   = 0.01;
-    decay    = 0.8;
-    sustain  = 0.1;
-    release  = 0.2;
-    cm_ratio = 7.5;
-    mod_amp  = 100;
+    pitch      = 0;
+    buffer     = (short *) malloc(2* sizeof(short) * BUFSIZE);
+    attack     = 0.01;
+    decay      = 0.8;
+    sustain    = 0.1;
+    release    = 0.2;
+    cm_ratio_1 = cm_ratio_2 = 2.0;
+    mod_amp_1  = mod_amp_2  = 100;
 
     run_worker = true;
+
+    car_func      = mod_func_1      = mod_func_2      = &fast_sin;
+    car_func_type = mod_func_1_type = mod_func_2_type = SINE;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
@@ -417,14 +453,110 @@ Handle<Value> SetEnvelope(const Arguments& args) {
     return scope.Close(Undefined());
 }
 
+func GetFunction(int type) {
+    
+    switch(type) {
+            
+        case SQUARE:
+            return &square_wave;
+
+        case TRIANGLE:
+            return &triangle_wave;
+
+        case SAWTOOTH:
+            return &sawtooth_wave;
+
+        case SINE:
+        default:
+            return &fast_sin;
+    }
+}
+
+Handle<Value> GetModulator(const Arguments& args) {
+    HandleScope scope;
+    const unsigned argc = 1;
+
+    if (args.Length() < 2) {
+        ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
+        return scope.Close(Undefined());
+    }
+
+    if (!args[0]->IsNumber()) {
+        ThrowException(Exception::TypeError(String::New("Argument should be a number")));
+        return scope.Close(Undefined());
+    }
+
+    if (!args[1]->IsFunction()) {
+        ThrowException(Exception::TypeError(String::New("Argument should be a function")));
+        return scope.Close(Undefined());
+    }
+    
+    Local<Function> cb      = Local<Function>::Cast(args[1]);
+    Local<Object> modulator = Object::New();
+    unsigned int mod_number = args[0]->NumberValue();
+
+    if(mod_number == 1) {
+        modulator->Set(String::New("waveform"), Number::New(mod_func_1_type));
+        modulator->Set(String::New("cm_ratio"), Number::New(cm_ratio_1));
+        modulator->Set(String::New("amplitude"), Number::New(mod_amp_1));
+    } else if(mod_number == 2) {
+        modulator->Set(String::New("waveform"), Number::New(mod_func_2_type));
+        modulator->Set(String::New("cm_ratio"), Number::New(cm_ratio_2));
+        modulator->Set(String::New("amplitude"), Number::New(mod_amp_2));
+    } else {
+        ThrowException(Exception::TypeError(String::New("Should be a valid modulator number (1 or 2)")));
+        return scope.Close(Undefined());
+    }
+    Local<Value> argv[argc] = { modulator };
+    cb->Call(Context::GetCurrent()->Global(), argc, argv);
+    return scope.Close(Undefined());
+}
+
+Handle<Value> SetModulator(const Arguments& args) {
+    HandleScope scope;    
+    unsigned int mod_number;
+
+    if (args.Length() < 4) {
+        ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
+        return scope.Close(Undefined());
+    }
+
+    if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber() || !args[3]->IsNumber()) {
+        ThrowException(Exception::TypeError(String::New("Invalid argument types")));
+        return scope.Close(Undefined());
+    }
+
+    mod_number         = args[0]->NumberValue();
+    unsigned int type  = args[1]->NumberValue();
+
+    if(mod_number == 1) {
+        mod_func_1       = GetFunction(type);
+        mod_func_1_type  = type;
+        cm_ratio_1       = args[2]->NumberValue();
+        mod_amp_1        = args[3]->NumberValue();
+    } else if(mod_number == 2) {
+        mod_func_2       = GetFunction(type);
+        mod_func_2_type  = type;
+        cm_ratio_2       = args[2]->NumberValue();
+        mod_amp_2        = args[3]->NumberValue();
+    } else {
+        ThrowException(Exception::TypeError(String::New("Should be a valid modulator number (1 or 2)")));
+        return scope.Close(Undefined());
+    }
+
+    return scope.Close(Undefined());
+}
+
 void Init(Handle<Object> target) {
     target->Set(String::NewSymbol("initPcm"), FunctionTemplate::New(InitPcm)->GetFunction());
     target->Set(String::NewSymbol("startPcm"), FunctionTemplate::New(StartPcm)->GetFunction());
     target->Set(String::NewSymbol("closePcm"), FunctionTemplate::New(ClosePcm)->GetFunction());
     target->Set(String::NewSymbol("noteOn"), FunctionTemplate::New(NoteOn)->GetFunction());
     target->Set(String::NewSymbol("noteOff"), FunctionTemplate::New(NoteOff)->GetFunction());
-    target->Set(String::NewSymbol("setEnvelope"), FunctionTemplate::New(SetEnvelope)->GetFunction());
     target->Set(String::NewSymbol("getEnvelope"), FunctionTemplate::New(GetEnvelope)->GetFunction());
+    target->Set(String::NewSymbol("setEnvelope"), FunctionTemplate::New(SetEnvelope)->GetFunction());
+    target->Set(String::NewSymbol("getModulator"), FunctionTemplate::New(GetModulator)->GetFunction());
+    target->Set(String::NewSymbol("setModulator"), FunctionTemplate::New(SetModulator)->GetFunction());
 }
 
 NODE_MODULE(oscillator, Init)

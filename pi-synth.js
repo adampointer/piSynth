@@ -1,8 +1,8 @@
 var midi        = require('midi');
 var util        = require('util');
-var midiHandler = require('./midiHandler');
-var Oscillator  = require('./oscillator');
-var Server      = require('./server');
+var midiHandler = require('./lib/midiHandler');
+var Oscillator  = require('./lib/oscillator');
+var Server      = require('./lib/server');
 
 /**
  * Instantiate objects
