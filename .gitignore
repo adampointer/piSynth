@@ -9,3 +9,4 @@ build
 .lock-wscript
 node_modules
 .idea
+*swp
