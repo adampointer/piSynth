@@ -113,28 +113,28 @@ int PCMWorker::PlaybackCallback(snd_pcm_sframes_t nframes)
     return snd_pcm_writei(playback_handle, buffer, nframes);
 }
 
-double PCMWorker::Envelope(int *note_active, int gate, double *env_level, double t, ADSR envelope)
+double PCMWorker::Envelope(int *note_active, int gate, double *env_level, double t, ADSR *envelope)
 {
     if(gate) {
 
-        if(t > attack + decay) {
-            return(*env_level = sustain);
+        if(t > envelope->attack + envelope->decay) {
+            return(*env_level = envelope->sustain);
         }
 
-        if(t > attack) {
-            return (*env_level = 1.0 - (1.0 - sustain) * (t - attack) / decay);
+        if(t > envelope->attack) {
+            return (*env_level = 1.0 - (1.0 - envelope->sustain) * (t - envelope->attack) / envelope->decay);
         }
-        return(*env_level = t / attack);
+        return(*env_level = t / envelope->attack);
     } else {
 
-        if(t > release) {
+        if(t > envelope->release) {
 
             if (note_active) {
                 *note_active = 0;
             }
             return(*env_level = 0);
         }
-        return(*env_level * (1.0 - t / release));
+        return(*env_level * (1.0 - t / envelope->release));
     }
 }
 

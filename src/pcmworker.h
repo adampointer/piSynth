@@ -44,6 +44,10 @@
 
 #define M_TWO_PI   6.2831853071796
 
+typedef struct ADSR {
+    double attack, decay, sustain, release;
+};
+
 
 class PCMWorker : protected ThreadedWorker::ThreadedWorker
 {
@@ -55,6 +59,7 @@ protected:
     void InternalThreadEntry();
     
 private:
+    snd_pcm_t *playback_handle;
     int PlaybackCallback(snd_pcm_sframes_t nframes);
     double Envelope(int *note_active, int gate, double *env_level, double t, ADSR envelope);
     double FastSine(double x);

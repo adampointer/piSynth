@@ -27,7 +27,8 @@
 #ifndef OSCILLATOR_H
 #define OSCILLATOR_H
 
-#include <node/node.h>
+#include <nodejs/node.h>
+#include <alsa/asoundlib.h>
 
 using namespace v8;
 
@@ -36,9 +37,10 @@ public:
     static void Init(Handle<Object> target);
     
 private:
+    snd_pcm_t *playback_handle;
     Oscillator();
     ~Oscillator();
-    
+    Handle<Value> New(const Arguments& args);
     Handle<Value> InitPcm(const Arguments& args);
     Handle<Value> StartPcm(const Arguments& args);
     Handle<Value> NoteOn(const Arguments& args);

@@ -2,7 +2,7 @@
 
 #include <string>
 #include <math.h>
-#include <node/node.h>
+#include <nodejs/node.h>
 #include <alsa/asoundlib.h>
 #include <pthread.h>
 
