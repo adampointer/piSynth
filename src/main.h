@@ -1,6 +1,32 @@
+/*
+ *    Copyright (C) 2012 Adam Pointer <adam.pointer@gmx.com>
+ *
+ *    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation 
+ *    files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, 
+ *    modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software 
+ *    is furnished to do so, subject to the following conditions:
+ *
+ *    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ *    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ *    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+ *    IN THE SOFTWARE.
+ */
+
+#ifndef MAIN_H
+#define MAIN_H
+
 #include <math.h>
 #include <alsa/asoundlib.h>
 #include <pthread.h>
+#include <stdio.h>
+#include <signal.h>
+
+#include "pcm.h"
+#include "midi.h"
+#include "mongoose.h"
+#include "server.h"
 
 #define BUFSIZE  512
 #define RATE     44100.0
@@ -29,8 +55,7 @@ double       (*mod_func_1)(double);
 double       (*mod_func_2)(double);
 double       (*car_func)(double);
 unsigned int mod_func_1_type, mod_func_2_type, car_func_type;
-
-typedef double (*generator_function)(double);
+struct       mg_context *ctx;
 
 typedef struct {
     unsigned int type; 
@@ -43,28 +68,8 @@ typedef struct {
 
 adsr_envelope carrier_envelope;
 
-double fastSin(double x);
-
-double squareWave(double x);
-
-double triangleWave(double x);
-
-double sawtoothWave(double x);
-
-int playbackCallback(snd_pcm_sframes_t nframes);
-
 void* startLoop();
 
-unsigned int initMidi();
+void cleanShutdown();
 
-unsigned int initPcm(char *pcm_name);
-
-unsigned int startPcm();
-
-unsigned int noteOn(int played_note, double played_velocity);
-
-unsigned int noteOff(int played_note);
-
-unsigned int closePcm();
-
-generator_function getFunction(unsigned int type);
+#endif // MAIN_H
