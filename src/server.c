@@ -27,5 +27,20 @@ unsigned int initServer() {
 }
 
 static void *httpCallback(enum mg_event event, struct mg_connection *conn) {
+    const struct mg_request_info *ri = mg_get_request_info(conn);
+    
+    if (event == MG_NEW_REQUEST) {
+        
+        if (strcmp(ri->uri, "/envelope") == 0) {
+            char json[100];
+            sprintf(json, "{\"attack\": %f, \"decay\": %f, \"sustain\": %f, \"release\": %f}",
+                carrier_envelope.attack, carrier_envelope.decay, carrier_envelope.sustain, carrier_envelope.release);
+            mg_printf(conn, "HTTP/1.0 200 OK\r\n"
+                "Content-Length: %d\r\n"
+                "Content-Type: application/json\r\n\r\n%s",
+                (int) strlen(json), json);
+            return "";
+        }
+    } 
     return NULL;
 }
