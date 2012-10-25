@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <signal.h>
 
+#include "config.h"
 #include "pcm.h"
 #include "midi.h"
 #include "mongoose.h"
@@ -42,6 +43,8 @@
 
 #define TRUE  1
 #define FALSE 0
+
+#define PORT 8989
 
 snd_pcm_t    *playback_handle;
 snd_seq_t    *seq_handle;
