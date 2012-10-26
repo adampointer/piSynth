@@ -16,3 +16,5 @@ cmake_install.cmake
 install_manifest.txt
 piSynth
 src/config.h
+Doxyfile
+docs
