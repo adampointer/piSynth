@@ -19,50 +19,59 @@
 
         <header>
           <h1>piSynth</h1>
-          <h2>Node.js and C++ based FM Synthesiser for the Raspberry Pi</h2>
+          <h2>C and Javascript based FM subtractive synthesiser for my Raspberry Pi</h2>
         </header>
 
         <section id="downloads" class="clearfix">
-          <a href="https://github.com/adampointer/piSynth/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/adampointer/piSynth/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/adampointer/piSynth/zipball/v0.3" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/adampointer/piSynth/tarball/v0.3" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
           <a href="https://github.com/adampointer/piSynth" id="view-on-github" class="button"><span>View on GitHub</span></a>
         </section>
 
         <hr>
 
         <section id="main_content">
-          <h2>What is it?</h2>
+            <p>An FM subtractive synthesiser with a browser based front-end written in C and Javascript. This is my pet project for my Raspberry Pi but it can run on any environment that can support it. I use a Ion Key49 USB MIDI keyboard to control it, but as it is built on top of ALSA it can use any hardware that ALSA can.</p>
+            <h2>
+            <a name="license" class="anchor" href="#license"><span class="mini-icon mini-icon-link"></span></a>License</h2>
 
-<p>This is an FM synthesiser with a browser front-end for fiddling about with and tweaking all the synthesis parameters. I am using it on a Raspberry Pi but it could be used on any platform that can feasibly compile and run it.</p>
+            <p>MIT - It's open source, do what you want with it but if you do anything interesting, let me know!</p>
 
-<h2>Node.js? Why?</h2>
+            <h2>
+            <a name="contributions" class="anchor" href="#contributions"><span class="mini-icon mini-icon-link"></span></a>Contributions</h2>
 
-<p>Actually Node.js is a good fit for this project, aside from the fact that it is super-trendy at the moment. It handles events very well and a MIDI input to PCM output with an HTTP interface is largely about events. A key is pressed on the keyboard triggering a MIDI event, this needs to be handled and trigger a note to be played. An envelope is modified in the HTTP interface firing a PUT request to the server, again, this is an event. Although anything involving hardware is written in C/C++, node.js is perfect for quickly and elegantly glueing everything together. And it is fun.</p>
+            <p>I welcome anybody that wishes to help out with this project, just send me an email.</p>
 
-<h2>Is it ready for use?</h2>
+            <h2>
+            <a name="dependencies" class="anchor" href="#dependencies"><span class="mini-icon mini-icon-link"></span></a>Dependencies</h2>
 
-<p>No. It plays basic sounds and you can change the ADSR envelope. Performance is poor on the Raspberry Pi but compiling the PCM module to use the FPU should help. I want to implement some kind of LUT/simple caching for the waveform generation. That will also help massively. Also I have loads more params that I want to be controlled from the browser and then I want to be able to load/save settings.</p>
+            <ul>
+            <li>ALSA libs and headers</li>
+            <li>POSIX threads libs and headers</li>
+            <li>CMake 2.8</li>
+            <li>Optionally, Doxygen to compile the API manpages</li>
+            </ul><h2>
+            <a name="installation" class="anchor" href="#installation"><span class="mini-icon mini-icon-link"></span></a>Installation</h2>
 
-<h2>How to use?</h2>
+            <pre><code>git clone git@github.com:adampointer/piSynth.git
+            cd piSynth
+            cmake ./
+            make
+            make install
+            </code></pre>
 
-<p>Compile the PCM modules with node-gyp, run the synth, then connect to the hardware.</p>
+            <h2>
+            <a name="running" class="anchor" href="#running"><span class="mini-icon mini-icon-link"></span></a>Running</h2>
 
-<p><code>node-gyp configure build</code>
-<code>node pi-synth.js</code>
-<code>aconnect -i</code>
-<code>aconnect -o</code></p>
+            <pre><code>piSynth hw:0
+            </code></pre>
 
-<p>Make a note of the id of your MIDI keybaoard (real or virtual) and the id of the synth and glue them together.</p>
-
-<p><code>aconnect &lt;IN&gt; &lt;OUT&gt;</code> </p>
+            <p>Substitute <code>hw:0</code> for the ALSA PCM hardware string you wish to use. Then use <code>aconnect</code> to link your MIDI hardware to the synth. The HTTP interface will be running on port 8989.</p>	
         </section>
-
         <footer>
-          piSynth is maintained by <a href="https://github.com/adampointer">adampointer</a><br>
-          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
+        piSynth is maintained by <a href="https://github.com/adampointer">adampointer</a><br>
+        This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
         </footer>
-
-        
       </div>
     </div>
   </body>
