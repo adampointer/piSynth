@@ -17,4 +17,4 @@ install_manifest.txt
 piSynth
 src/config.h
 Doxyfile
-docs
+doc

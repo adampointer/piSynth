@@ -1,23 +1,34 @@
 # piSynth #
 
-My rather daft pet project to build a fuly configurable FM synth with browser-based control panel using Node.js and ALSA
-with a little C++ thrown in. It is aimed at the Raspberry Pi as that is what I run this on, but it can conceivably run
-on anything Linux based.
+An FM subtractive synthesiser with a browser based front-end written in C and Javascript. This is my pet project for my Raspberry Pi but it can run on any environment that can support it. I use a Ion Key49 USB MIDI keyboard to control it, but as it is built on top of ALSA it can use any hardware that ALSA can.
+
+## License ##
+
+MIT - It's open source, do what you want with it but if you do anything interesting, let me know!
+
+## Contributions ##
+
+I welcome anybody that wishes to help out with this project, just send me an email.
 
 ## Dependencies ##
 
-Needs ALSA libs and headers, Node.js (0.8) with NPM and node-gyp (Latest versions).
++ ALSA libs and headers
++ POSIX threads libs and headers
++ CMake 2.8
++ Optionally, Doxygen to compile the API manpages
 
 ## Installation ##
 
     git clone git@github.com:adampointer/piSynth.git
-    cd pisynth
-    npm install
+    cd piSynth
+    cmake ./
+    make
+    make install
 
 ## Running ##
 
-    node pi-synth.js
+    piSynth hw:0
 
-Then use `aconnect` to link your MIDI hardware to the synth. The HTTP interface will be running on port 8989.
+Substitute `hw:0` for the ALSA PCM hardware string you wish to use. Then use `aconnect` to link your MIDI hardware to the synth. The HTTP interface will be running on port 8989.
 
 

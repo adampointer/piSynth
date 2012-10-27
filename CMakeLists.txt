@@ -10,16 +10,20 @@ configure_file(
     )
 include_directories("${piSynth_BINARY_DIR}")
 add_executable(piSynth src/main.c src/pcm.c src/midi.c src/mongoose.c src/server.c)
-target_link_libraries(piSynth m asound pthread)
+
+find_package(ALSA)
+find_package(Threads)
+target_link_libraries(piSynth m ${CMAKE_DL_LIBS} ${ALSA_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
     configure_file(${piSynth_SOURCE_DIR}/Doxyfile.in ${piSynth_BINARY_DIR}/Doxyfile @ONLY)
-    add_custom_target(doc
+    add_custom_target(doc ALL
     ${DOXYGEN_EXECUTABLE} ${piSynth_BINARY_DIR}/Doxyfile
     WORKING_DIRECTORY ${piSynth_BINARY_DIR}
-    COMMENT "Generating API documentation with Doxygen" VERBATIM
+    COMMENT "Generating man pages" VERBATIM
     )
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/doc/man/ DESTINATION man)
 endif(DOXYGEN_FOUND)
 
 install(TARGETS piSynth DESTINATION bin)
