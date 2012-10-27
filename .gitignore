@@ -9,3 +9,12 @@ build
 .lock-wscript
 node_modules
 .idea
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
+piSynth
+src/config.h
+Doxyfile
+doc

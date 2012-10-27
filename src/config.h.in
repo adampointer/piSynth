@@ -1,0 +1,3 @@
+#define VERSION_MAJOR @piSynth_VERSION_MAJOR@
+#define VERSION_MINOR @piSynth_VERSION_MINOR@
+#define DOCUMENT_ROOT "@piSynth_DOCUMENT_ROOT@"
