@@ -24,27 +24,6 @@
 #include "main.h"
 
 ///
-/// Function pointer to signal generation function
-///
-/// \typedef
-///
-typedef double ( *generator_function ) ( double );
-
-///
-/// Implements the envelope as defined in carrier_envelope
-///
-/// \todo Make more generic
-///
-/// \param note_active Is note active?
-/// \param gate        Gate
-/// \param env_level   Level
-/// \param t           Time
-///
-/// \return amplitude
-///
-double envelope ( int *note_active, int gate, double *env_level, double t );
-
-///
 /// Taylor series sine aproximation
 ///
 /// \param x
@@ -79,6 +58,72 @@ double triangleWave ( double x );
 /// \return y
 ///
 double sawtoothWave ( double x );
+
+///
+/// Function pointer to signal generation function
+///
+/// \typedef
+///
+typedef double ( *generator_function ) ( double );
+
+///
+/// Defines properties of an modulator
+/// \typedef
+/// \struct
+///
+typedef struct
+{
+  enum waveform type;      ///< Function type
+  generator_function func; ///< Function pointer
+  double cm_ratio;         ///< Carrier to Modulator ratio
+  double amplitude;        ///< Amplitude of modulator signal
+  double phase[POLY];      ///< Phase
+} oscillator;
+
+///
+/// Default values for oscillators
+///
+const oscillator default_osc;
+
+///
+/// Define the two modulators and the carrier
+///
+oscillator modulator_1, modulator_2, carrier;
+
+///
+/// Defines properties of an ADSR envelope
+///
+/// \typedef
+/// \struct
+///
+typedef struct
+{
+  double attack, decay, sustain, release;
+} adsr_envelope;
+
+///
+/// Default values for ADSR envelopes
+///
+const adsr_envelope default_env;
+
+///
+/// ADSR envelope for the main carrier signal
+///
+adsr_envelope carrier_envelope;
+
+///
+/// Implements the envelope as defined in carrier_envelope
+///
+/// \todo Make more generic
+///
+/// \param note_active Is note active?
+/// \param gate        Gate
+/// \param env_level   Level
+/// \param t           Time
+///
+/// \return amplitude
+///
+double envelope ( int *note_active, int gate, double *env_level, double t );
 
 ///
 /// Fired when a PCM event is recieved

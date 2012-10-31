@@ -72,9 +72,7 @@ short *buffer;
 ///
 /// Sound properties
 ///
-double pitch, velocity[POLY], env_level[POLY], env_time[POLY], mod_phase_1[POLY],
-       mod_phase_2[POLY], car_phase[POLY], cm_ratio_1, cm_ratio_2, mod_amp_1,
-       mod_amp_2;
+double pitch, velocity[POLY], env_level[POLY], env_time[POLY];
 
 ///
 /// Node properties
@@ -92,57 +90,9 @@ unsigned int rate;
 unsigned int run_worker;
 
 ///
-/// Pointer to the function generating first modulator signal
-///
-double ( *mod_func_1 ) ( double );
-
-///
-/// Pointer to the function generating second modulator signal
-///
-double ( *mod_func_2 ) ( double );
-
-///
-/// Pointer to the function generating carrier signal
-///
-double ( *car_func ) ( double );
-
-///
-/// The function type to return to the client
-///
-enum waveform mod_func_1_type, mod_func_2_type, car_func_type;
-
-///
 /// Mongoose HTTP handle
 ///
 struct mg_context *ctx;
-
-///
-/// Defines properties of an modulator
-/// \typedef
-/// \struct
-///
-typedef struct
-{
-  unsigned int type; ///< Function type
-  double cm_ratio;   ///< Carrier to Modulator ratio
-  double mod_amp;    ///< Amplitude of modulator signal
-} oscillator;
-
-///
-/// Defines properties of an ADSR envelope
-///
-/// \typedef
-/// \struct
-///
-typedef struct
-{
-  double attack, decay, sustain, release;
-} adsr_envelope;
-
-///
-/// ADSR envelope for the main carrier signal
-///
-adsr_envelope carrier_envelope;
 
 ///
 /// Callback for pthread_create loops and responds to ALSA events

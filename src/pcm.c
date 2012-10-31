@@ -26,6 +26,20 @@
 
 #include "pcm.h"
 
+const oscillator default_osc = {
+  sine,
+  &fastSin,
+  10.0,
+  100.0
+};
+
+const adsr_envelope default_env = {
+  0.01,
+  0.8,
+  0.1,
+  0.2
+};
+
 double envelope ( int *note_active, int gate, double *env_level, double t )
 {
 
@@ -116,37 +130,36 @@ int playbackCallback ( snd_pcm_sframes_t nframes )
       if ( note_active[poly] )
         {
           freq = 8.176 * exp ( ( double ) note[poly] * constant );
-          mod_phase_1_increment = freq_rad * ( freq * cm_ratio_1 );
-          mod_phase_2_increment = freq_rad * ( freq * cm_ratio_2 );
+          mod_phase_1_increment = freq_rad * ( freq * modulator_1.cm_ratio );
+          mod_phase_2_increment = freq_rad * ( freq * modulator_2.cm_ratio );
 
-          if ( !car_phase[poly] ) car_phase[poly]     = 0.0;
-          if ( !mod_phase_1[poly] ) mod_phase_1[poly] = 0.0;
-          if ( !mod_phase_2[poly] ) mod_phase_2[poly] = 0.0;
+          if ( !carrier.phase[poly] ) carrier.phase[poly] = 0.0;
+          if ( !modulator_1.phase[poly] ) modulator_1.phase[poly] = 0.0;
+          if ( !modulator_2.phase[poly] ) modulator_2.phase[poly] = 0.0;
 
           for ( n = 0; n < nframes; n++ )
             {
               sound = envelope ( &note_active[poly], gate[poly],
                                  &env_level[poly], env_time[poly] ) *
-                      GAIN * velocity[poly] * ( *car_func ) ( car_phase[poly] );
+                      GAIN * velocity[poly] * ( *( carrier.func ) ) ( carrier.phase[poly] );
               env_time[poly] += 1.0 / rate;
               buffer[2 * n] += sound;
               buffer[2 * n + 1] += sound;
-              mod_value_1 = mod_amp_1 * ( *mod_func_1 ) ( mod_phase_1[poly] );
-              mod_value_2 = mod_amp_2 * ( *mod_func_2 ) ( mod_phase_2[poly] );
-              car_phase_increment = freq_rad *
-                                    ( freq + mod_value_1 + mod_value_2 );
+              mod_value_1 = modulator_1.amplitude * ( *( modulator_1.func ) ) ( modulator_1.phase[poly] );
+              mod_value_2 = modulator_2.amplitude * ( *( modulator_2.func ) ) ( modulator_2.phase[poly] );
+              car_phase_increment = freq_rad * ( freq + mod_value_1 + mod_value_2 );
 
-              car_phase[poly] += car_phase_increment;
-              if ( car_phase[poly]   >= M_TWO_PI )
-                car_phase[poly] -= M_TWO_PI;
+              carrier.phase[poly] += car_phase_increment;
+              if ( carrier.phase[poly]   >= M_TWO_PI )
+                carrier.phase[poly] -= M_TWO_PI;
 
-              mod_phase_1[poly] += mod_phase_1_increment;
-              if ( mod_phase_1[poly] >= M_TWO_PI )
-                mod_phase_1[poly] -= M_TWO_PI;
+              modulator_1.phase[poly] += mod_phase_1_increment;
+              if ( modulator_1.phase[poly] >= M_TWO_PI )
+                modulator_1.phase[poly] -= M_TWO_PI;
 
-              mod_phase_2[poly] += mod_phase_2_increment;
-              if ( mod_phase_2[poly] >= M_TWO_PI )
-                mod_phase_2[poly] -= M_TWO_PI;
+              modulator_2.phase[poly] += mod_phase_2_increment;
+              if ( modulator_2.phase[poly] >= M_TWO_PI )
+                modulator_2.phase[poly] -= M_TWO_PI;
             }
         }
     }
@@ -186,8 +199,7 @@ unsigned int initPcm ( char *pcm_name )
       return ( FALSE );
     }
 
-  if ( snd_pcm_hw_params_set_rate_near ( playback_handle, hw_params,
-                                         &rate, 0 ) <0 )
+  if ( snd_pcm_hw_params_set_rate_near ( playback_handle, hw_params, &rate, 0 ) <0 )
     {
       fprintf ( stderr, "Error setting rate" );
       return ( FALSE );
@@ -247,18 +259,11 @@ unsigned int startPcm()
   pitch = 0;
   buffer = ( short * ) malloc ( 2* sizeof ( short ) * BUFSIZE );
 
-  carrier_envelope.attack  = 0.01;
-  carrier_envelope.decay = 0.8;
-  carrier_envelope.sustain = 0.1;
-  carrier_envelope.release = 0.2;
-
-  cm_ratio_1 = cm_ratio_2 = 2.0;
-  mod_amp_1 = mod_amp_2 = 100;
+  // Initialise our envelopes and oscillators
+  carrier_envelope = default_env;
+  modulator_1 = modulator_2 = carrier = default_osc;
 
   run_worker = TRUE;
-
-  car_func = mod_func_1 = mod_func_2 = &fastSin;
-  car_func_type = mod_func_1_type = mod_func_2_type = sine;
 
   pthread_create ( &loop, NULL, &startLoop, NULL );
   pthread_join ( loop, NULL );

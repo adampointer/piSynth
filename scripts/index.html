@@ -12,6 +12,7 @@
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/envelope.controls.js"></script>
         <script src="/js/modulator.controls.js"></script>
+        <script src="/js/carrier.controls.js"></script>
         <script src="/js/controls.js"></script>
     </head>
     <body>
@@ -50,10 +51,10 @@
                             </div>
                             <div>
                                 <select class="waveform" name="waveform-1">
-                                    <option value="1">Triangle</option>
-                                    <option value="2">Square</option>
-                                    <option value="3">Sawtooth</option>
-                                    <option value="4">Sine</option>
+                                    <option value="0">Triangle</option>
+                                    <option value="1">Square</option>
+                                    <option value="2">Sawtooth</option>
+                                    <option value="3">Sine</option>
                                 </select>
                             </div>    
                         </form>
@@ -72,12 +73,12 @@
                             </div>
                             <div>
                                 <select class="waveform" name="waveform-2">
-                                    <option value="1">Triangle</option>
-                                    <option value="2">Square</option>
-                                    <option value="3">Sawtooth</option>
-                                    <option value="4">Sine</option>
+                                    <option value="0">Triangle</option>
+                                    <option value="1">Square</option>
+                                    <option value="2">Sawtooth</option>
+                                    <option value="3">Sine</option>
                                 </select>
-                            </div>    
+                            </div>
                         </form>
                         <p>Amplitude</p>
                         <div class="slider space amplitude" data-parameter="amplitude"></div>
@@ -92,6 +93,28 @@
                         <div class="slider pull-left space" id="decay"></div>
                         <div class="slider pull-left space" id="sustain"></div>
                         <div class="slider pull-left space" id="release"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="span4">&nbsp;</div>
+                <div class="span4">&nbsp;</div>
+                <div class="span4">
+                    <h3>Waveform</h3>
+                    <div id="carrier" class="carrier-control" data-modnumber="2">
+                        <form action="#">
+                            <div>
+                                <label for="waveform-3">Waveform:</label>
+                            </div>
+                            <div>
+                                <select class="waveform" name="waveform-3">
+                                    <option value="0">Triangle</option>
+                                    <option value="1">Square</option>
+                                    <option value="2">Sawtooth</option>
+                                    <option value="3">Sine</option>
+                                </select>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

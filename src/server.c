@@ -25,6 +25,7 @@
 ///
 
 #include "server.h"
+#include "pcm.h"
 
 unsigned int initServer()
 {
@@ -56,6 +57,11 @@ static void *httpCallback ( enum mg_event event, struct mg_connection *conn )
           modulatorHandler ( conn, ri, arg_1 );
           return "";
         }
+      else if ( strcmp ( ri->uri, "/carrier" ) == 0 )
+        {
+          carrierHandler ( conn, ri );
+          return "";
+        }
     }
   return NULL;
 }
@@ -70,10 +76,7 @@ void envelopeHandler ( struct mg_connection *conn, const struct mg_request_info 
                 "{\"attack\":%f, \"decay\":%f, \"sustain\":%f,\"release\":%f}",
                 carrier_envelope.attack, carrier_envelope.decay,
                 carrier_envelope.sustain, carrier_envelope.release );
-      mg_printf ( conn, "HTTP/1.0 200 OK\r\n"
-                  "Content-Length: %d\r\n"
-                  "Content-Type: application/json\r\n\r\n%s",
-                  ( int ) strlen ( json ), json );
+      writeResponse ( conn, "200 OK", json );
     }
   else if ( strcmp ( ri->request_method, "PUT" ) == 0 )
     {
@@ -89,17 +92,11 @@ void envelopeHandler ( struct mg_connection *conn, const struct mg_request_info 
           carrier_envelope.decay = atof ( decay );
           carrier_envelope.sustain = atof ( sustain );
           carrier_envelope.release = atof ( release );
-          mg_printf ( conn, "HTTP/1.0 200 OK\r\n"
-                      "Content-Length: %d\r\n"
-                      "Content-Type: application/json\r\n\r\n%s",
-                      ( int ) strlen ( ok_response ), ok_response );
+          writeResponse ( conn, "200 OK", ok_response );
         }
       else
         {
-          mg_printf ( conn, "HTTP/1.0 400 Bad Request\r\n"
-                      "Content-Length: %d\r\n"
-                      "Content-Type: application/json\r\n\r\n%s",
-                      ( int ) strlen ( fail_response ), fail_response );
+          writeResponse ( conn, "400 Bad Request", fail_response );
         }
     }
 }
@@ -107,30 +104,77 @@ void envelopeHandler ( struct mg_connection *conn, const struct mg_request_info 
 void modulatorHandler ( struct mg_connection *conn,
                         const struct mg_request_info *ri, int num )
 {
+  oscillator *osc;
+
+  if ( num == 1 )
+    osc = &modulator_1;
+  else if ( num == 2 )
+    osc = &modulator_2;
+  else
+    {
+      writeResponse ( conn, "404 Not Found", fail_response );
+      return;
+    }
 
   if ( strcmp ( ri->request_method, "GET" ) == 0 )
     {
       char json[100];
-
-      if ( num == 1 )
-        sprintf ( json, "{\"waveform\":%d, \"cm_ratio\":%f, \"amplitude\":%f",
-                  mod_func_1_type, cm_ratio_1, mod_amp_1 );
-      else if ( num == 2 )
-        sprintf ( json, "{\"waveform\":%d, \"cm_ratio\":%f, \"amplitude\":%f",
-                  mod_func_2_type, cm_ratio_2, mod_amp_2 );
-      else
-        mg_printf ( conn, "HTTP/1.0 404 Not Found\r\n"
-                    "Content-Length: %d\r\n"
-                    "Content-Type: application/json\r\n\r\n%s",
-                    ( int ) strlen ( fail_response ), fail_response );
-        
-      mg_printf ( conn, "HTTP/1.0 200 OK\r\n"
-                  "Content-Length: %d\r\n"
-                  "Content-Type: application/json\r\n\r\n%s",
-                  ( int ) strlen ( json ), json );
+      sprintf ( json, "{\"waveform\":%d, \"cm_ratio\":%f, \"amplitude\":%f}",
+                osc->type, osc->cm_ratio, osc->amplitude );
+      writeResponse ( conn, "200 OK", json );
     }
   else if ( strcmp ( ri->request_method, "PUT" ) == 0 )
     {
+      char data[1024], waveform[10], cm_ratio[10], amplitude[10];
+      int  len = mg_read ( conn, data, sizeof ( data ) );
 
+      if ( ( mg_get_var ( data, len, "waveform",  waveform, sizeof ( waveform ) ) > 0 ) &&
+           ( mg_get_var ( data, len, "cm_ratio",   cm_ratio, sizeof ( cm_ratio ) ) > 0 ) &&
+           ( mg_get_var ( data, len, "amplitude", amplitude, sizeof ( amplitude ) ) > 0 ) )
+        {
+          osc->type = atoi ( waveform );
+          osc->func = getFunction ( osc->type );
+          osc->cm_ratio = atof ( cm_ratio );
+          osc->amplitude = atof ( amplitude );
+          writeResponse ( conn, "200 OK", ok_response );
+        }
+      else
+        {
+          writeResponse ( conn, "400 Bad Request", fail_response );
+        }
     }
+}
+
+void carrierHandler ( struct mg_connection *conn, const struct mg_request_info *ri )
+{
+  if ( strcmp ( ri->request_method, "GET" ) == 0 )
+    {
+      char json[100];
+      sprintf ( json, "{\"waveform\":%d}", carrier.type );
+      writeResponse ( conn, "200 OK", json );
+    }
+  else if ( strcmp ( ri->request_method, "PUT" ) == 0 )
+    {
+      char data[1024], waveform[10];
+      int  len = mg_read ( conn, data, sizeof ( data ) );
+
+      if ( mg_get_var ( data, len, "waveform",  waveform, sizeof ( waveform ) ) > 0 )
+        {
+          carrier.type = atoi ( waveform );
+          carrier.func = getFunction ( carrier.type );
+          writeResponse ( conn, "200 OK", ok_response );
+        }
+      else
+        {
+          writeResponse ( conn, "400 Bad Request", fail_response );
+        }
+    }
+}
+
+void writeResponse ( struct mg_connection *conn, const char *response_string,
+                     const char *body )
+{
+  mg_printf ( conn, "HTTP/1.0 %s\r\nContent-Length: %d\r\n"
+              "Content-Type: application/json\r\n\r\n%s",
+              response_string, ( int ) strlen ( body ), body );
 }

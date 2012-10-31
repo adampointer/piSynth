@@ -66,4 +66,20 @@ void envelopeHandler ( struct mg_connection *conn, const struct mg_request_info 
 void modulatorHandler ( struct mg_connection *conn,
                         const struct mg_request_info *ri, int num );
 
+///
+/// Processes requests made to the carrier endpoint
+///
+/// \param conn HTTP connection
+/// \param ri   Request info
+///
+void carrierHandler ( struct mg_connection *conn, const struct mg_request_info *ri);
+
+///
+/// Write a response to the client
+/// \param conn            HTTP connection
+/// \param response_string HTTP response e.g. "404 Not Found"
+/// \param body            Response body
+///
+void writeResponse(struct mg_connection *conn, const char *response_string, const char *body);
+
 #endif // SERVER_H
