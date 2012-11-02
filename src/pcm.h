@@ -86,9 +86,9 @@ typedef struct
 const oscillator default_osc;
 
 ///
-/// Define the two modulators and the carrier
+/// Define the modulators and the carrier
 ///
-oscillator modulator_1, modulator_2, carrier;
+oscillator modulator_1, modulator_2, modulator_3, modulator_4, carrier;
 
 ///
 /// Defines properties of an ADSR envelope
@@ -116,10 +116,10 @@ adsr_envelope carrier_envelope;
 ///
 /// \todo Make more generic
 ///
-/// \param note_active Is note active?
-/// \param gate        Gate
-/// \param env_level   Level
-/// \param t           Time
+/// \param *note_active Is note active?
+/// \param gate         Gate
+/// \param *env_level   Level
+/// \param t            Time
 ///
 /// \return amplitude
 ///
@@ -137,7 +137,7 @@ int playbackCallback ( snd_pcm_sframes_t nframes );
 ///
 /// Initialise PCM
 ///
-/// \param pcm_name ALSA device name
+/// \param *pcm_name ALSA device name
 ///
 unsigned int initPcm ( char *pcm_name );
 

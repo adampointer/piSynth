@@ -25,19 +25,22 @@
 ///
 
 #include "pcm.h"
+#include "filter.h"
 
-const oscillator default_osc = {
+const oscillator default_osc =
+{
   sine,
   &fastSin,
-  10.0,
-  100.0
+  8.0,
+  80.0
 };
 
-const adsr_envelope default_env = {
-  0.01,
-  0.8,
+const adsr_envelope default_env =
+{
   0.1,
-  0.2
+  0.1,
+  0.2,
+  0.1
 };
 
 double envelope ( int *note_active, int gate, double *env_level, double t )
@@ -116,9 +119,11 @@ double sawtoothWave ( double x )
 int playbackCallback ( snd_pcm_sframes_t nframes )
 {
   int    poly, n;
-  double constant, freq, freq_rad, mod_phase_1_increment,
-         mod_phase_2_increment, car_phase_increment, sound, mod_value_1,
-         mod_value_2;
+  double constant, freq, freq_rad, car_phase_increment, sound;
+  double mod_phase_1_increment, mod_value_1;
+  double mod_phase_2_increment, mod_value_2;
+  double mod_phase_3_increment, mod_value_3;
+  double mod_phase_4_increment, mod_value_4;
 
   constant = ( log ( 2.0 ) / 12.0 );
   freq_rad = M_TWO_PI / rate;
@@ -141,13 +146,19 @@ int playbackCallback ( snd_pcm_sframes_t nframes )
             {
               sound = envelope ( &note_active[poly], gate[poly],
                                  &env_level[poly], env_time[poly] ) *
-                      GAIN * velocity[poly] * ( *( carrier.func ) ) ( carrier.phase[poly] );
+                      GAIN * velocity[poly] *
+                      filter ( ( * ( carrier.func ) ) ( carrier.phase[poly] ), &primary_filter );
+
               env_time[poly] += 1.0 / rate;
               buffer[2 * n] += sound;
               buffer[2 * n + 1] += sound;
-              mod_value_1 = modulator_1.amplitude * ( *( modulator_1.func ) ) ( modulator_1.phase[poly] );
-              mod_value_2 = modulator_2.amplitude * ( *( modulator_2.func ) ) ( modulator_2.phase[poly] );
-              car_phase_increment = freq_rad * ( freq + mod_value_1 + mod_value_2 );
+              mod_value_1 = modulator_1.amplitude * ( * ( modulator_1.func ) ) ( modulator_1.phase[poly] );
+              mod_value_2 = modulator_2.amplitude * ( * ( modulator_2.func ) ) ( modulator_2.phase[poly] );
+              mod_value_3 = modulator_3.amplitude * ( * ( modulator_3.func ) ) ( modulator_3.phase[poly] );
+              mod_value_4 = modulator_4.amplitude * ( * ( modulator_4.func ) ) ( modulator_4.phase[poly] );
+              car_phase_increment = freq_rad * ( freq + mod_value_1 +
+                                                 mod_value_2 + mod_value_3 + 
+                                                 mod_value_4 );
 
               carrier.phase[poly] += car_phase_increment;
               if ( carrier.phase[poly]   >= M_TWO_PI )
@@ -160,6 +171,14 @@ int playbackCallback ( snd_pcm_sframes_t nframes )
               modulator_2.phase[poly] += mod_phase_2_increment;
               if ( modulator_2.phase[poly] >= M_TWO_PI )
                 modulator_2.phase[poly] -= M_TWO_PI;
+
+              modulator_3.phase[poly] += mod_phase_3_increment;
+              if ( modulator_3.phase[poly] >= M_TWO_PI )
+                modulator_3.phase[poly] -= M_TWO_PI;
+
+              modulator_4.phase[poly] += mod_phase_4_increment;
+              if ( modulator_4.phase[poly] >= M_TWO_PI )
+                modulator_4.phase[poly] -= M_TWO_PI;
             }
         }
     }
@@ -256,12 +275,15 @@ unsigned int startPcm()
 {
   pthread_t loop;
 
+  initFilter( &primary_filter );
+
   pitch = 0;
   buffer = ( short * ) malloc ( 2* sizeof ( short ) * BUFSIZE );
 
   // Initialise our envelopes and oscillators
   carrier_envelope = default_env;
-  modulator_1 = modulator_2 = carrier = default_osc;
+  modulator_1 = modulator_2 = modulator_3 = modulator_4 = default_osc;
+  carrier = default_osc;
 
   run_worker = TRUE;
 

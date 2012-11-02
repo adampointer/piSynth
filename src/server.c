@@ -110,6 +110,10 @@ void modulatorHandler ( struct mg_connection *conn,
     osc = &modulator_1;
   else if ( num == 2 )
     osc = &modulator_2;
+  else if ( num == 3 )
+    osc = &modulator_3;
+  else if ( num == 4 )
+    osc = &modulator_4;
   else
     {
       writeResponse ( conn, "404 Not Found", fail_response );

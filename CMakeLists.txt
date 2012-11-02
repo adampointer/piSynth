@@ -9,7 +9,7 @@ configure_file(
     "${piSynth_BINARY_DIR}/src/config.h"
     )
 include_directories("${piSynth_BINARY_DIR}")
-add_executable(piSynth src/main.c src/pcm.c src/midi.c src/mongoose.c src/server.c)
+add_executable(piSynth src/main.c src/pcm.c src/midi.c src/mongoose.c src/server.c src/filter.c)
 
 find_package(ALSA)
 find_package(Threads)

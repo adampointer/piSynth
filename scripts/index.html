@@ -31,18 +31,21 @@
                 </div>
             </div>
             <div class="row">
-                <div class="span4">
+                <div class="span3">
                     <h2>Modulator One</h2>
                 </div>
-                <div class="span4">
+                <div class="span3">
                     <h2>Modulator Two</h2>
                 </div>
-                <div class="span4">
-                    <h2>Carrier</h2>
+                <div class="span3">
+                    <h2>Modulator Three</h2>
+                </div>
+                <div class="span3">
+                    <h2>Modulator Four</h2>
                 </div>
             </div>
             <div class="row">
-                <div class="span4">
+                <div class="span3">
                     <h3>Waveform</h3>
                     <div id="mod1" class="modulator-control" data-modnumber="1">
                         <form action="#">
@@ -64,7 +67,7 @@
                         <div class="slider space cm_ratio" data-parameter="cm_ratio"></div>
                     </div>
                 </div>
-                <div class="span4">
+                <div class="span3">
                     <h3>Waveform</h3>
                     <div id="mod2" class="modulator-control" data-modnumber="2">
                         <form action="#">
@@ -86,7 +89,55 @@
                         <div class="slider space cm_ratio" data-parameter="cm_ratio"></div>
                     </div>
                 </div>
-                <div class="span4">
+                <div class="span3">
+                    <h3>Waveform</h3>
+                    <div id="mod3" class="modulator-control" data-modnumber="3">
+                        <form action="#">
+                            <div>
+                                <label for="waveform-3">Waveform:</label>
+                            </div>
+                            <div>
+                                <select class="waveform" name="waveform-3">
+                                    <option value="0">Triangle</option>
+                                    <option value="1">Square</option>
+                                    <option value="2">Sawtooth</option>
+                                    <option value="3">Sine</option>
+                                </select>
+                            </div>
+                        </form>
+                        <p>Amplitude</p>
+                        <div class="slider space amplitude" data-parameter="amplitude"></div>
+                        <p>C/M Ratio</p>
+                        <div class="slider space cm_ratio" data-parameter="cm_ratio"></div>
+                    </div>
+                </div>
+                <div class="span3">
+                    <h3>Waveform</h3>
+                    <div id="mod4" class="modulator-control" data-modnumber="4">
+                        <form action="#">
+                            <div>
+                                <label for="waveform-4">Waveform:</label>
+                            </div>
+                            <div>
+                                <select class="waveform" name="waveform-4">
+                                    <option value="0">Triangle</option>
+                                    <option value="1">Square</option>
+                                    <option value="2">Sawtooth</option>
+                                    <option value="3">Sine</option>
+                                </select>
+                            </div>
+                        </form>
+                        <p>Amplitude</p>
+                        <div class="slider space amplitude" data-parameter="amplitude"></div>
+                        <p>C/M Ratio</p>
+                        <div class="slider space cm_ratio" data-parameter="cm_ratio"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="span3">&nbsp;</div>
+                <div class="span3">&nbsp;</div>
+                <div class="span3">
                     <h3>ADSR Envelope</h3>
                     <div class="envelope-control">
                         <div class="slider pull-left space" id="attack"></div>
@@ -95,11 +146,7 @@
                         <div class="slider pull-left space" id="release"></div>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="span4">&nbsp;</div>
-                <div class="span4">&nbsp;</div>
-                <div class="span4">
+                <div class="span3">
                     <h3>Waveform</h3>
                     <div id="carrier" class="carrier-control" data-modnumber="2">
                         <form action="#">
