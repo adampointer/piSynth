@@ -21,8 +21,6 @@
 #ifndef FILTER_H
 #define FILTER_H
 
-#define SQRT2 1.414213562
-
 #include "main.h"
 
 ///
@@ -35,28 +33,17 @@ enum filter_type {
 };
 
 ///
-/// Holds pre-calculated coefficients for the filter
-///
-/// \typedef
-/// \struct
-///
-typedef struct {
-  double amp_in0, amp_in1, amp_in2;
-  double amp_out1, amp_out2;
-} filter_coefficients;
-
-///
 /// Structure defining the complete filter
 /// \typedef
 /// \struct
 ///
 typedef struct {
-  enum filter_type type;
-  filter_coefficients coefficients;
-  double cutoff;
-  double input_delay1, input_delay2;
-  double output_delay1, output_delay2;
-  double gain;
+  enum filter_type type;   ///< Filter type
+  double cutoff;           ///< Cutoff frequency (Hz)
+  double Q;                ///< Resonance 0 - 1
+  double feedback;         ///< Feedback
+  double coefficient;      ///< Coefficient
+  double buffer0, buffer1; ///< Buffers
 } filter_t;
 
 filter_t primary_filter;

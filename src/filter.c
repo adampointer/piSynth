@@ -21,7 +21,7 @@
 ///
 /// \file   filter.h
 /// \author Adam Pointer <adam.pointer@gmx.com>
-/// \brief  12db/8ve butterworth filter
+/// \brief  Second order resonant filter
 ///
 
 #include "filter.h"
@@ -29,75 +29,44 @@
 void initFilter ( filter_t *filter )
 {
   filter->type = lowpass;
-  filter->input_delay1 = 0;
-  filter->input_delay2 = 0;
-  filter->output_delay1 = 0;
-  filter->output_delay2 = 0;
-  filter->cutoff = 5000;
-  filter->gain = 1;
+  filter->cutoff = 3000;
+  filter->Q = 0.5;
+  filter->buffer0 = filter->buffer1 = 0;
 
-  calculateCoefficients( filter );
+  calculateCoefficients ( filter );
 }
 
 void calculateCoefficients ( filter_t* filter )
 {
-  double c, c2, d, csqr2;
-
-  switch ( filter->type )
-    {
-    case lowpass:
-      c = 1 / tan ( ( M_PI / rate ) * filter->cutoff );
-      c2 = c * c;
-      csqr2 = SQRT2 * c;
-      d = ( c2 + csqr2 + 1 );
-      filter->coefficients.amp_in0 = 1 / d;
-      filter->coefficients.amp_in1 = filter->coefficients.amp_in0 +
-                                     filter->coefficients.amp_in0;
-      filter->coefficients.amp_in2 = filter->coefficients.amp_in0;
-      filter->coefficients.amp_out1 = ( 2 * ( 1 - c2 ) ) / d;
-      filter->coefficients.amp_out2 = ( c2 - csqr2 + 1 ) / d;
-      break;
-
-    case highpass:
-      c = 1 / tan ( ( M_PI / rate ) * filter->cutoff );
-      c2 = c * c;
-      csqr2 = SQRT2 * c;
-      d = ( c2 + csqr2 + 1 );
-      filter->coefficients.amp_in0 = 1 / d;
-      filter->coefficients.amp_in1 = - ( filter->coefficients.amp_in0 +
-                                         filter->coefficients.amp_in0 );
-      filter->coefficients.amp_in2 = filter->coefficients.amp_in0;
-      filter->coefficients.amp_out1 = ( 2 * ( c2 - 1 ) ) / d;
-      filter->coefficients.amp_out2 = ( 1 - csqr2 + c2 ) / d;
-      break;
-
-    case bandpass:
-      c = 1 / tan ( ( M_PI / rate ) * filter->cutoff );
-      d = 1 + c;
-      filter->coefficients.amp_in0 = 1 / d;
-      filter->coefficients.amp_in1 = 0;
-      filter->coefficients.amp_in2 = -filter->coefficients.amp_in0;
-      filter->coefficients.amp_out1 = ( -c * 2 *
-                                        cos ( M_TWO_PI * filter->cutoff / rate )
-                                      ) / d;
-      filter->coefficients.amp_out2 = ( c - 1 ) / d;
-      break;
-    }
+  filter->coefficient = 2.0 * M_PI * filter->cutoff / rate;
+  filter->feedback = filter->Q + filter->Q / ( 1.0 - filter->coefficient );
 }
 
 double filter ( double input, filter_t* filter )
 {
-  double output;
+  double hp, bp, output;
 
-  output = ( filter->coefficients.amp_in0 * input ) +
-           ( filter->coefficients.amp_in1 * filter->input_delay1 ) +
-           ( filter->coefficients.amp_in2 * filter->input_delay2 ) -
-           ( filter->coefficients.amp_out1 * filter->output_delay1 ) -
-           ( filter->coefficients.amp_out2 * filter->output_delay2 );
-  filter->output_delay2 = filter->output_delay1;
-  filter->output_delay1 = output;
-  filter->input_delay2 = filter->input_delay1;
-  filter->input_delay1 = input;
+  hp = input - filter->buffer0;
+  bp = filter->buffer0 - filter->buffer1;
+  filter->buffer0 = filter->buffer0 + filter->coefficient *
+                    ( hp + filter->feedback * bp );
+  filter->buffer1 = filter->buffer1 + filter->coefficient *
+                    ( filter->buffer0 - filter->buffer1 );
 
-  return output * filter->gain;
+  switch ( filter->type )
+    {
+    case lowpass:
+      output = filter->buffer1;
+      break;
+
+    case highpass:
+      output = hp;
+      break;
+
+    case bandpass:
+      output = bp;
+      break;
+    }
+
+  return GAIN * output;
 }

@@ -144,10 +144,10 @@ int playbackCallback ( snd_pcm_sframes_t nframes )
 
           for ( n = 0; n < nframes; n++ )
             {
-              sound = envelope ( &note_active[poly], gate[poly],
+              sound = filter ( envelope ( &note_active[poly], gate[poly],
                                  &env_level[poly], env_time[poly] ) *
-                      GAIN * velocity[poly] *
-                      filter ( ( * ( carrier.func ) ) ( carrier.phase[poly] ), &primary_filter );
+                      velocity[poly] *
+                      ( * ( carrier.func ) ) ( carrier.phase[poly] ), &primary_filter );
 
               env_time[poly] += 1.0 / rate;
               buffer[2 * n] += sound;

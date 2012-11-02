@@ -34,7 +34,7 @@
 #define BUFSIZE  512
 #define RATE     44100.0
 #define POLY     8
-#define GAIN     1000.0
+#define GAIN     500.0
 
 #define M_TWO_PI 6.2831853071796
 
