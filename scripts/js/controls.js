@@ -1,4 +1,9 @@
 var adsr = new EnvelopeControl();
+var NUM_MODULATORS = 4;
+var modulators = [];
 
-var modulator_1 = new ModulatorControl('#mod1');
-var modulator_2 = new ModulatorControl('#mod2');
+for(var i = 1; i >= NUM_MODULATORS; i++) {
+    modulators[] = new ModulatorControl('#mod'+i);
+}
+
+var carrier = new CarrierControl('#carrier');
