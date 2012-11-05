@@ -102,5 +102,5 @@ int main ( int argc, char *argv[] )
       fprintf ( stderr, "HTTP interface initialised\n" );
 
   startPcm();
-  exit ( FALSE );
+  exit ( 0 );
 }

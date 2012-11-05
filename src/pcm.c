@@ -31,7 +31,7 @@ const oscillator default_osc =
 {
   sine,
   &fastSin,
-  8.0,
+  20.0,
   80.0
 };
 
@@ -147,7 +147,7 @@ int playbackCallback ( snd_pcm_sframes_t nframes )
               sound = filter ( envelope ( &note_active[poly], gate[poly],
                                  &env_level[poly], env_time[poly] ) *
                       velocity[poly] *
-                      ( * ( carrier.func ) ) ( carrier.phase[poly] ), &primary_filter );
+                      ( * ( carrier.func ) ) ( carrier.phase[poly] ), &primary_filter, poly );
 
               env_time[poly] += 1.0 / rate;
               buffer[2 * n] += sound;

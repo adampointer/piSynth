@@ -28,10 +28,30 @@
 
 void initFilter ( filter_t *filter )
 {
+  int i;
+
+  delay_buffer = ( double ** ) calloc ( POLY, sizeof ( double * ) );
+
+  if ( delay_buffer == NULL )
+    {
+      fprintf ( stderr, "Could not allocate delay buffer" );
+      exit ( 1 );
+    }
+
+  for ( i = 0; i < POLY; i++ )
+    {
+      delay_buffer[i] = ( double * ) calloc ( 2, sizeof ( double ) );
+
+      if ( delay_buffer[i] == NULL )
+        {
+          fprintf ( stderr, "Could not allocate delay buffer" );
+          exit ( 1 );
+        }
+    }
+
   filter->type = lowpass;
   filter->cutoff = 3000;
-  filter->Q = 0.5;
-  filter->buffer0 = filter->buffer1 = 0;
+  filter->Q = 0.9;
 
   calculateCoefficients ( filter );
 }
@@ -42,21 +62,21 @@ void calculateCoefficients ( filter_t* filter )
   filter->feedback = filter->Q + filter->Q / ( 1.0 - filter->coefficient );
 }
 
-double filter ( double input, filter_t* filter )
+double filter ( double input, filter_t* filter, unsigned int poly )
 {
   double hp, bp, output;
 
-  hp = input - filter->buffer0;
-  bp = filter->buffer0 - filter->buffer1;
-  filter->buffer0 = filter->buffer0 + filter->coefficient *
+  hp = input - delay_buffer[poly][0];
+  bp = delay_buffer[poly][0] - delay_buffer[poly][1];
+  delay_buffer[poly][0] = delay_buffer[poly][0] + filter->coefficient *
                     ( hp + filter->feedback * bp );
-  filter->buffer1 = filter->buffer1 + filter->coefficient *
-                    ( filter->buffer0 - filter->buffer1 );
+  delay_buffer[poly][1] = delay_buffer[poly][1] + filter->coefficient *
+                    ( delay_buffer[poly][0] - delay_buffer[poly][1] );
 
   switch ( filter->type )
     {
     case lowpass:
-      output = filter->buffer1;
+      output = delay_buffer[poly][1];
       break;
 
     case highpass:

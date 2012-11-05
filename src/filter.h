@@ -43,10 +43,17 @@ typedef struct {
   double Q;                ///< Resonance 0 - 1
   double feedback;         ///< Feedback
   double coefficient;      ///< Coefficient
-  double buffer0, buffer1; ///< Buffers
 } filter_t;
 
+///
+/// The main filter
+///
 filter_t primary_filter;
+
+///
+/// Buffers for the delayed signals
+///
+double **delay_buffer;
 
 ///
 /// Initialise the filter
@@ -65,7 +72,8 @@ void calculateCoefficients (filter_t *filter );
 ///
 /// \param input   Input sample
 /// \param *filter Pointer to filter structure
+/// \param poly    Note number
 ///
-double filter ( double input, filter_t *filter );
+double filter ( double input, filter_t *filter, unsigned int poly );
 
 #endif //FILTER_H
