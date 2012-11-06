@@ -43,6 +43,7 @@ typedef struct {
   double Q;                ///< Resonance 0 - 1
   double feedback;         ///< Feedback
   double coefficient;      ///< Coefficient
+  double gain;             ///< Gain
 } filter_t;
 
 ///

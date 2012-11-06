@@ -52,6 +52,7 @@ void initFilter ( filter_t *filter )
   filter->type = lowpass;
   filter->cutoff = 3000;
   filter->Q = 0.9;
+  filter->gain = GAIN;
 
   calculateCoefficients ( filter );
 }
@@ -88,5 +89,5 @@ double filter ( double input, filter_t* filter, unsigned int poly )
       break;
     }
 
-  return GAIN * output;
+  return filter->gain * output;
 }
