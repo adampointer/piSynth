@@ -326,6 +326,7 @@ unsigned int noteOff ( int played_note )
         {
           env_time[i] = 0;
           gate[i] = 0;
+          resetLFO( &filter_lfo, i );
         }
     }
   return ( TRUE );

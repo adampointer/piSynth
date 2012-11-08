@@ -49,7 +49,6 @@ unsigned int midiCallback()
 
         case SND_SEQ_EVENT_NOTEOFF:
           noteOff ( ev->data.note.note );
-          resetLFO( &filter_lfo );
           break;
         }
       snd_seq_free_event ( ev );
