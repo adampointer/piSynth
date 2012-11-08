@@ -25,6 +25,7 @@
 ///
 
 #include "filter.h"
+#include "lfo.h"
 
 void initFilter ( filter_t *filter )
 {
@@ -50,7 +51,7 @@ void initFilter ( filter_t *filter )
     }
 
   filter->type = lowpass;
-  filter->cutoff = 3000;
+  filter->cutoff = 2000;
   filter->Q = 0.9;
   filter->gain = GAIN;
 
@@ -66,6 +67,9 @@ void calculateCoefficients ( filter_t* filter )
 double filter ( double input, filter_t* filter, unsigned int poly )
 {
   double hp, bp, output;
+
+  lfo ( &( filter->cutoff ), &filter_lfo, poly );
+  calculateCoefficients ( filter );
 
   hp = input - delay_buffer[poly][0];
   bp = delay_buffer[poly][0] - delay_buffer[poly][1];

@@ -25,6 +25,7 @@
 ///
 
 #include "pcm.h"
+#include "lfo.h"
 #include "filter.h"
 
 const oscillator default_osc =
@@ -161,7 +162,7 @@ int playbackCallback ( snd_pcm_sframes_t nframes )
                                                  mod_value_4 );
 
               carrier.phase[poly] += car_phase_increment;
-              if ( carrier.phase[poly]   >= M_TWO_PI )
+              if ( carrier.phase[poly] >= M_TWO_PI )
                 carrier.phase[poly] -= M_TWO_PI;
 
               modulator_1.phase[poly] += mod_phase_1_increment;
@@ -275,6 +276,7 @@ unsigned int startPcm()
 {
   pthread_t loop;
 
+  initLFO ( &filter_lfo );
   initFilter( &primary_filter );
 
   pitch = 0;
