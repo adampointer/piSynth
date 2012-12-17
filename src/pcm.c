@@ -32,16 +32,16 @@ const oscillator default_osc =
 {
   sine,
   &fastSin,
-  20.0,
+  1,
   80.0
 };
 
 const adsr_envelope default_env =
 {
   0.1,
-  0.1,
-  0.2,
-  0.1
+  0.8,
+  0.9,
+  0.4
 };
 
 double envelope ( int *note_active, int gate, double *env_level, double t )
@@ -107,8 +107,14 @@ double squareWave ( double x )
 
 double triangleWave ( double x )
 {
-  double f = x / M_TWO_PI;
-  return abs ( 4 * ( f - floor ( f + 0.5 ) ) ) - 1.0;
+  double f = 4 * ( x / M_TWO_PI );
+  double y;
+
+  if ( fabs ( f ) < 2 )
+    y = f;
+  else
+    y = 2 - ( f - 2 );
+  return y - 1;
 }
 
 double sawtoothWave ( double x )
