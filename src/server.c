@@ -193,7 +193,7 @@ void filterHandler ( struct mg_connection *conn, const struct mg_request_info *r
     }
     else if ( strcmp ( ri->request_method, "PUT" ) == 0 )
     {
-      char data[1024], type[10], Q[10], cutoff[10], gain[10];
+      char data[1024], type[10], Q[10], cutoff[20], gain[10];
       int  len = mg_read ( conn, data, sizeof ( data ) );
  
       if ( ( mg_get_var ( data, len, "type",  type, sizeof ( type ) ) > 0 ) &&

@@ -32,7 +32,7 @@ void initLFO ( lfo_t* lfo )
   lfo->enabled = TRUE;
   lfo->phase = ( double * ) calloc ( POLY, sizeof ( double ) );
   lfo->frequency = 0.2;
-  lfo->amplitude = 1000;
+  lfo->amplitude = 500;
 }
 
 void lfo ( double* param, lfo_t* lfo, unsigned int poly )
@@ -44,7 +44,7 @@ void lfo ( double* param, lfo_t* lfo, unsigned int poly )
       if ( !lfo->initial ) lfo->initial = *param;
 
       phase_increment = ( M_TWO_PI / rate ) * lfo->frequency;
-      mod = lfo->amplitude * fastSin( lfo->phase[poly] );
+      mod = lfo->amplitude * fastSin ( lfo->phase[poly] );
       *param = lfo->initial + mod;
       lfo->phase[poly] += phase_increment;
 
