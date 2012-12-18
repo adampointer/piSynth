@@ -29,10 +29,10 @@
 #include "midi.h"
 #include "server.h"
 
-void* startLoop()
+void* startLoop ()
 {
-  int     seq_nfds, nfds, i, j, k;
-  struct pollfd *pfds;
+  int     seq_nfds, nfds, result, i, j, k;
+  struct  pollfd *pfds;
 
   seq_nfds = snd_seq_poll_descriptors_count ( seq_handle, POLLIN );
   nfds = snd_pcm_poll_descriptors_count ( playback_handle );
@@ -43,6 +43,7 @@ void* startLoop()
   snd_pcm_poll_descriptors ( playback_handle, pfds+seq_nfds, nfds );
 
   for ( i = 0; i < POLY; note_active[i++] = 0 );
+  memset ( buffer, 0, BUFSIZE * 4 );
 
   while ( run_worker )
     {
@@ -58,12 +59,21 @@ void* startLoop()
 
               if ( pfds[k].revents > 0 )
                 {
-
-                  if ( playbackCallback ( BUFSIZE ) < BUFSIZE )
+                  result = playbackCallback ( BUFSIZE );
+                  
+                  if ( result == -EPIPE )
                     {
-                      fprintf ( stderr, "=== Buffer Underrun ===\n" );
-                      snd_pcm_prepare ( playback_handle );
-                    }
+                       fprintf ( stderr, "Buffer underrun\n" );
+                       snd_pcm_prepare ( playback_handle );
+                     }
+                  else if ( result < 0 )
+                     {
+                       fprintf ( stderr, "Playback error: %s\n", snd_strerror ( result ) );
+                     }
+                  else if ( result != BUFSIZE )
+                     {
+                       fprintf ( stderr, "Short write, only %d frames written", result );
+                     }
                 }
             }
         }
@@ -71,7 +81,7 @@ void* startLoop()
   pthread_exit ( 0 );
 }
 
-void cleanShutdown()
+void cleanShutdown ()
 {
   fprintf ( stderr, "\nCTRL+C caught, attempting clean shutdown...\n" );
   run_worker = FALSE;
