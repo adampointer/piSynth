@@ -31,58 +31,6 @@
 #include "midi.h"
 #include "server.h"
 
-void* startLoop ()
-{
-  int    seq_nfds, nfds, result, i, j, k;
-  struct pollfd *pfds;
-
-  seq_nfds = snd_seq_poll_descriptors_count ( seq_handle, POLLIN );
-  nfds = snd_pcm_poll_descriptors_count ( playback_handle );
-  pfds = ( struct pollfd * ) alloca ( sizeof ( struct pollfd ) *
-                                      ( seq_nfds + nfds ) );
-
-  snd_seq_poll_descriptors ( seq_handle, pfds, seq_nfds, POLLIN );
-  snd_pcm_poll_descriptors ( playback_handle, pfds+seq_nfds, nfds );
-
-  for ( i = 0; i < POLY; note_active[i++] = 0 );
-  memset ( buffer, 0, BUFSIZE * 4 );
-
-  while ( run_worker )
-    {
-
-      if ( poll ( pfds, seq_nfds + nfds, 1000 ) > 0 )
-        {
-
-          for ( j = 0; j < seq_nfds; j++ )
-            if ( pfds[j].revents > 0 ) midiCallback();
-
-          for ( k = seq_nfds; k < seq_nfds + nfds; k++ )
-            {
-
-              if ( pfds[k].revents > 0 )
-                {
-                  result = playbackCallback ( BUFSIZE );
-                  
-                  if ( result == -EPIPE )
-                    {
-                       fprintf ( stderr, "Buffer underrun\n" );
-                       snd_pcm_prepare ( playback_handle );
-                     }
-                  else if ( result < 0 )
-                     {
-                       fprintf ( stderr, "Playback error: %s\n", snd_strerror ( result ) );
-                     }
-                  else if ( result != BUFSIZE )
-                     {
-                       fprintf ( stderr, "Short write, only %d frames written", result );
-                     }
-                }
-            }
-        }
-    }
-  pthread_exit ( 0 );
-}
-
 void cleanShutdown ()
 {
   fprintf ( stderr, "\nCTRL+C caught, attempting clean shutdown...\n" );
@@ -142,6 +90,7 @@ int main ( int argc, char *argv[] )
   if ( optind < argc )
     {
       signal ( SIGINT, cleanShutdown );
+      run_worker = TRUE;
 
       if ( initMidi() == FALSE )
         {

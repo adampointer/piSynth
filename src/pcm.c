@@ -293,12 +293,37 @@ unsigned int startPcm()
   modulator_1 = modulator_2 = modulator_3 = modulator_4 = default_osc;
   carrier = default_osc;
 
-  run_worker = TRUE;
-
-  pthread_create ( &loop, NULL, &startLoop, NULL );
+  pthread_create ( &loop, NULL, &startPcmLoop, NULL );
   pthread_join ( loop, NULL );
 
   return ( TRUE );
+}
+
+void* startPcmLoop ()
+{
+  int result, i;
+
+  for ( i = 0; i < POLY; note_active[i++] = 0 );
+
+  while ( run_worker )
+  {
+    result = playbackCallback ( BUFSIZE );
+
+    if ( result == -EPIPE )
+    {
+      fprintf ( stderr, "Buffer underrun\n" );
+      snd_pcm_prepare ( playback_handle );
+    }
+    else if ( result < 0 )
+    {
+      fprintf ( stderr, "Playback error: %s\n", snd_strerror ( result ) );
+    }
+    else if ( result != BUFSIZE )
+    {
+      fprintf ( stderr, "Short write, only %d frames written", result );
+    }
+  }
+  pthread_exit ( 0 );
 }
 
 unsigned int noteOn ( int played_note, double played_velocity )
@@ -332,7 +357,6 @@ unsigned int noteOff ( int played_note )
         {
           env_time[i] = 0;
           gate[i] = 0;
-          resetLFO( &filter_lfo, i );
         }
     }
   return ( TRUE );

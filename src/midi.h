@@ -23,6 +23,8 @@
 
 #include "main.h"
 
+void* startMidiLoop ();
+
 ///
 /// Initialise MIDI
 ///

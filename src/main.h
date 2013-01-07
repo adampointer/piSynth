@@ -31,7 +31,7 @@
 #include "config.h"
 #include "mongoose.h"
 
-#define BUFSIZE  512
+#define BUFSIZE  1024    // 23ms latency
 #define RATE     44100.0
 #define POLY     8
 #define GAIN     1000.0
@@ -93,13 +93,6 @@ unsigned int run_worker;
 /// Mongoose HTTP handle
 ///
 struct mg_context *ctx;
-
-///
-/// Callback for pthread_create loops and responds to ALSA events
-///
-/// \return void
-///
-void* startLoop();
 
 ///
 /// Try to clean up as much as possible before quitting

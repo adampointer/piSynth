@@ -147,6 +147,13 @@ unsigned int initPcm ( char *pcm_name );
 unsigned int startPcm();
 
 ///
+/// Callback for pthread_create loops and responds to ALSA events
+///
+/// \return void
+///
+void* startPcmLoop();
+
+///
 /// Turn MIDI data into sound!
 ///
 /// \param played_note     Note
