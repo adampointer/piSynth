@@ -26,6 +26,7 @@
 
 #include "server.h"
 #include "pcm.h"
+#include "filter.h"
 
 unsigned int initServer()
 {
@@ -60,6 +61,11 @@ static void *httpCallback ( enum mg_event event, struct mg_connection *conn )
       else if ( strcmp ( ri->uri, "/carrier" ) == 0 )
         {
           carrierHandler ( conn, ri );
+          return "";
+        }
+      else if ( strcmp ( ri->uri, "/filter" ) == 0 )
+        {
+          filterHandler ( conn, ri );
           return "";
         }
     }
@@ -174,6 +180,41 @@ void carrierHandler ( struct mg_connection *conn, const struct mg_request_info *
         }
     }
 }
+
+void filterHandler ( struct mg_connection *conn, const struct mg_request_info *ri )
+{
+  if ( strcmp ( ri->request_method, "GET" ) == 0 )
+  {
+    char json[100];
+    sprintf ( json, "{\"type\":%d, \"Q\":%f, \"cutoff\":%f, \"gain\":%f}", 
+              primary_filter.type, primary_filter.Q, primary_filter.cutoff,
+              primary_filter.gain );
+    writeResponse ( conn, "200 OK", json );
+    }
+    else if ( strcmp ( ri->request_method, "PUT" ) == 0 )
+    {
+      char data[1024], type[10], Q[10], cutoff[20], gain[10];
+      int  len = mg_read ( conn, data, sizeof ( data ) );
+ 
+      if ( ( mg_get_var ( data, len, "type",  type, sizeof ( type ) ) > 0 ) &&
+           ( mg_get_var ( data, len, "Q",  Q, sizeof ( Q ) ) > 0 ) &&
+           ( mg_get_var ( data, len, "cutoff",  cutoff, sizeof ( cutoff ) ) > 0 ) &&
+           ( mg_get_var ( data, len, "gain",  gain, sizeof ( gain ) ) > 0 ) )
+      {
+        primary_filter.type = atoi ( type );
+        primary_filter.Q = atof ( Q );
+        primary_filter.cutoff = atof ( cutoff );
+        primary_filter.gain = atof ( gain );
+        calculateCoefficients( &primary_filter );
+
+        writeResponse ( conn, "200 OK", ok_response );
+      }
+      else
+      {
+        writeResponse ( conn, "400 Bad Request", fail_response );
+      }
+    }
+  }
 
 void writeResponse ( struct mg_connection *conn, const char *response_string,
                      const char *body )

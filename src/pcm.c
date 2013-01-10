@@ -25,22 +25,23 @@
 ///
 
 #include "pcm.h"
+#include "lfo.h"
 #include "filter.h"
 
 const oscillator default_osc =
 {
   sine,
   &fastSin,
-  20.0,
+  1,
   80.0
 };
 
 const adsr_envelope default_env =
 {
   0.1,
-  0.1,
-  0.2,
-  0.1
+  0.8,
+  0.9,
+  0.4
 };
 
 double envelope ( int *note_active, int gate, double *env_level, double t )
@@ -106,8 +107,14 @@ double squareWave ( double x )
 
 double triangleWave ( double x )
 {
-  double f = x / M_TWO_PI;
-  return abs ( 4 * ( f - floor ( f + 0.5 ) ) ) - 1.0;
+  double f = 4 * ( x / M_TWO_PI );
+  double y;
+
+  if ( fabs ( f ) < 2 )
+    y = f;
+  else
+    y = 2 - ( f - 2 );
+  return y - 1;
 }
 
 double sawtoothWave ( double x )
@@ -161,7 +168,7 @@ int playbackCallback ( snd_pcm_sframes_t nframes )
                                                  mod_value_4 );
 
               carrier.phase[poly] += car_phase_increment;
-              if ( carrier.phase[poly]   >= M_TWO_PI )
+              if ( carrier.phase[poly] >= M_TWO_PI )
                 carrier.phase[poly] -= M_TWO_PI;
 
               modulator_1.phase[poly] += mod_phase_1_increment;
@@ -275,6 +282,7 @@ unsigned int startPcm()
 {
   pthread_t loop;
 
+  initLFO ( &filter_lfo );
   initFilter( &primary_filter );
 
   pitch = 0;
@@ -285,12 +293,37 @@ unsigned int startPcm()
   modulator_1 = modulator_2 = modulator_3 = modulator_4 = default_osc;
   carrier = default_osc;
 
-  run_worker = TRUE;
-
-  pthread_create ( &loop, NULL, &startLoop, NULL );
+  pthread_create ( &loop, NULL, &startPcmLoop, NULL );
   pthread_join ( loop, NULL );
 
   return ( TRUE );
+}
+
+void* startPcmLoop ()
+{
+  int result, i;
+
+  for ( i = 0; i < POLY; note_active[i++] = 0 );
+
+  while ( run_worker )
+  {
+    result = playbackCallback ( BUFSIZE );
+
+    if ( result == -EPIPE )
+    {
+      fprintf ( stderr, "Buffer underrun\n" );
+      snd_pcm_prepare ( playback_handle );
+    }
+    else if ( result < 0 )
+    {
+      fprintf ( stderr, "Playback error: %s\n", snd_strerror ( result ) );
+    }
+    else if ( result != BUFSIZE )
+    {
+      fprintf ( stderr, "Short write, only %d frames written", result );
+    }
+  }
+  pthread_exit ( 0 );
 }
 
 unsigned int noteOn ( int played_note, double played_velocity )

@@ -18,25 +18,42 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef MIDI_H
-#define MIDI_H
+///
+/// \file   lfo.h
+/// \author Adam Pointer <adam.pointer@gmx.com>
+/// \brief  Flexible and reusable LFO
+///
 
-#include "main.h"
+#include "lfo.h"
+#include "pcm.h"
 
-void* startMidiLoop ();
+void initLFO ( lfo_t* lfo )
+{
+  lfo->enabled = TRUE;
+  lfo->phase = ( double * ) calloc ( POLY, sizeof ( double ) );
+  lfo->frequency = 0.2;
+  lfo->amplitude = 500;
+}
 
-///
-/// Initialise MIDI
-///
-/// \return bool Success
-///
-unsigned int initMidi();
+void lfo ( double* param, lfo_t* lfo, unsigned int poly )
+{
+  double phase_increment, mod;
 
-///
-/// Fired when a MIDI event is detected
-///
-/// \return bool Success
-///
-unsigned int midiCallback();
+  if ( lfo->enabled )
+    {
+      if ( !lfo->initial ) lfo->initial = *param;
 
-#endif // MIDI_H
+      phase_increment = ( M_TWO_PI / rate ) * lfo->frequency;
+      mod = lfo->amplitude * fastSin ( lfo->phase[poly] );
+      *param = lfo->initial + mod;
+      lfo->phase[poly] += phase_increment;
+
+      if ( lfo->phase[poly] >= M_TWO_PI ) lfo->phase[poly] -= M_TWO_PI;
+    }
+}
+
+void resetLFO ( lfo_t* lfo, unsigned int poly )
+{
+  lfo->phase[poly] = 0;
+}
+

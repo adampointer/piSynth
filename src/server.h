@@ -75,6 +75,14 @@ void modulatorHandler ( struct mg_connection *conn,
 void carrierHandler ( struct mg_connection *conn, const struct mg_request_info *ri);
 
 ///
+/// Processes requests made to the filter endpoint
+///
+/// \param *conn HTTP connection
+/// \param *ri   Request info
+///
+void filterHandler ( struct mg_connection *conn, const struct mg_request_info *ri);
+
+///
 /// Write a response to the client
 /// \param *conn            HTTP connection
 /// \param *response_string HTTP response e.g. "404 Not Found"

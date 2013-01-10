@@ -13,6 +13,7 @@
         <script src="/js/envelope.controls.js"></script>
         <script src="/js/modulator.controls.js"></script>
         <script src="/js/carrier.controls.js"></script>
+        <script src="/js/filter.controls.js"></script>
         <script src="/js/controls.js"></script>
     </head>
     <body>
@@ -136,7 +137,29 @@
             </div>
             <div class="row">
                 <div class="span3">&nbsp;</div>
-                <div class="span3">&nbsp;</div>
+                <div class="span3">
+                  <h3>Filter</h3>
+                  <div id="primary-filter" class="filter-control">
+                      <form action="#">
+                            <div>
+                                <label for="filter-1">Type:</label>
+                            </div>
+                            <div>
+                                <select class="type" name="filter-1">
+                                    <option value="0">Lowpass</option>
+                                    <option value="1">Highpass</option>
+                                    <option value="2">Bandpass</option>
+                                </select>
+                            </div>
+                      </form>
+                      <p>Resonance</p>
+                      <div class="slider space Q" data-parameter="Q"></div>
+                      <p>Cutoff Frequency</p>
+                      <div class="slider space cutoff" data-parameter="cutoff"></div>
+                      <p>Gain</p>
+                      <div class="slider space gain" data-parameter="gain"></div>
+                  </div>
+                </div>
                 <div class="span3">
                     <h3>ADSR Envelope</h3>
                     <div class="envelope-control">

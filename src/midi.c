@@ -26,38 +26,50 @@
 
 #include "midi.h"
 #include "pcm.h"
+#include "lfo.h"
 
 unsigned int midiCallback()
 {
   snd_seq_event_t *ev;
 
   do
+  {
+    snd_seq_event_input ( seq_handle, &ev );
+
+    switch ( ev->type )
     {
-      snd_seq_event_input ( seq_handle, &ev );
 
-      switch ( ev->type )
-        {
+      case SND_SEQ_EVENT_PITCHBEND:
+        pitch = ( double ) ev->data.control.value / 8192.0;
+        break;
 
-        case SND_SEQ_EVENT_PITCHBEND:
-          pitch = ( double ) ev->data.control.value / 8192.0;
-          break;
+      case SND_SEQ_EVENT_NOTEON:
+        noteOn ( ev->data.note.note, ev->data.note.velocity );
+        break;
 
-        case SND_SEQ_EVENT_NOTEON:
-          noteOn ( ev->data.note.note, ev->data.note.velocity );
-          break;
-
-        case SND_SEQ_EVENT_NOTEOFF:
-          noteOff ( ev->data.note.note );
-          break;
-        }
-      snd_seq_free_event ( ev );
+      case SND_SEQ_EVENT_NOTEOFF:
+        noteOff ( ev->data.note.note );
+        break;
     }
+    snd_seq_free_event ( ev );
+  }
   while ( snd_seq_event_input_pending ( seq_handle, 0 ) > 0 );
   return ( TRUE );
 }
 
+void* startMidiLoop ()
+{
+
+  while ( run_worker )
+    {
+      midiCallback();
+    }
+  pthread_exit ( 0 );
+}
+
 unsigned int initMidi()
 {
+  pthread_t loop;
   rate = 44100;
 
   if ( snd_seq_open ( &seq_handle, "default", SND_SEQ_OPEN_DUPLEX, 0 ) < 0 )
@@ -66,6 +78,7 @@ unsigned int initMidi()
       return ( FALSE );
     }
   snd_seq_set_client_name ( seq_handle, "piSynth" );
+
   if ( snd_seq_create_simple_port ( seq_handle, "piSynth",
                                     SND_SEQ_PORT_CAP_WRITE|SND_SEQ_PORT_CAP_SUBS_WRITE,
                                     SND_SEQ_PORT_TYPE_APPLICATION ) < 0 )
@@ -73,5 +86,7 @@ unsigned int initMidi()
       fprintf ( stderr, "Error creating sequencer port.\n" );
       return ( FALSE );
     }
+  pthread_create ( &loop, NULL, &startMidiLoop, NULL );
+
   return ( TRUE );
 }

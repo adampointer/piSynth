@@ -18,63 +18,51 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef FILTER_H
-#define FILTER_H
+#ifndef LFO_H
+#define LFO_H
 
 #include "main.h"
 
 ///
-/// Filter type
+/// LFO
 ///
-enum filter_type {
-  lowpass,  ///< Low pass
-  highpass, ///< High pass
-  bandpass  ///< Band pass
-};
-
-///
-/// Structure defining the complete filter
 /// \typedef
 /// \struct
 ///
 typedef struct {
-  enum filter_type type;   ///< Filter type
-  double cutoff;           ///< Cutoff frequency (Hz)
-  double Q;                ///< Resonance 0 - 1
-  double feedback;         ///< Feedback
-  double coefficient;      ///< Coefficient
-  double gain;             ///< Gain
-} filter_t;
+  double frequency;     ///< LFO frequency
+  double *phase;        ///< Stores the phase between samples
+  double amplitude;     ///< LFO amplitude
+  double initial;       ///< Stores initial value of modulated param
+  unsigned int enabled; ///< Enable the LFO
+} lfo_t;
 
 ///
-/// The main filter
+/// LFO for the primary filter
 ///
-filter_t primary_filter;
+lfo_t filter_lfo;
 
 ///
-/// Buffers for the delayed signals
+/// Initialise the LFO
 ///
-double **delay_buffer;
+/// \param *lfo Pointer to LFO structure
+///
+void initLFO ( lfo_t *lfo );
 
 ///
-/// Initialise the filter
+/// Modulate a parameter with the LFO
 ///
-void initFilter ( filter_t *filter );
+/// \param *param Pointer to modulated parameter
+/// \param *lfo   Pointer to LFO structure
+/// \param poly   Poly number
+///
+void lfo ( double *param, lfo_t *lfo, unsigned int poly );
 
 ///
-/// Pre-calculate the coefficients
+/// Reset to initial state
 ///
-/// \param *filter Pointer to the filter structure
+/// \param lfo  Pointer to LFO structure
+/// \param poly Poly number
 ///
-void calculateCoefficients (filter_t *filter );
-
-///
-/// Apply the filter to the input sample
-///
-/// \param input   Input sample
-/// \param *filter Pointer to filter structure
-/// \param poly    Note number
-///
-double filter ( double input, filter_t *filter, unsigned int poly );
-
-#endif //FILTER_H
+void resetLFO ( lfo_t *lfo, unsigned int poly );
+#endif // LFO_H
