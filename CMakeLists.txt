@@ -4,6 +4,14 @@ project(piSynth)
 set(piSynth_VERSION_MAJOR 0)
 set(piSynth_VERSION_MINOR 4)
 set(piSynth_DOCUMENT_ROOT ${CMAKE_INSTALL_PREFIX}/share/piSynth/scripts)
+
+message("-- Checking architecture")
+message("   ...${CMAKE_SYSTEM_PROCESSOR}")
+
+if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "armv6l")
+    set(CMAKE_C_FLAGS "-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s")
+endif()
+
 configure_file(
     "${piSynth_SOURCE_DIR}/src/config.h.in"
     "${piSynth_BINARY_DIR}/src/config.h"
