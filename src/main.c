@@ -30,6 +30,7 @@
 #include "pcm.h"
 #include "midi.h"
 #include "server.h"
+#include "alsaconnect.h"
 
 void cleanShutdown ()
 {
@@ -40,6 +41,7 @@ void cleanShutdown ()
   snd_seq_close ( seq_handle );
   mg_stop ( ctx );
   free ( buffer );
+  free ( inputs );
 }
 
 void printHelp ()
@@ -109,8 +111,7 @@ int main ( int argc, char *argv[] )
           fprintf ( stderr, "Failed to initialise HTTP interface\n" );
           exit ( 1 );
         }
-
-      startPcm();
+      startPcm ();
       exit ( 0 );
     }
   else

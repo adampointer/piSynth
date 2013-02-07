@@ -27,6 +27,7 @@
 #include "server.h"
 #include "pcm.h"
 #include "filter.h"
+#include "alsaconnect.h"
 
 unsigned int initServer()
 {
@@ -48,7 +49,12 @@ static void *httpCallback ( enum mg_event event, struct mg_connection *conn )
   if ( event == MG_NEW_REQUEST )
     {
 
-      if ( strcmp ( ri->uri, "/envelope" ) == 0 )
+      if ( strcmp ( ri->uri, "/connect" ) == 0 )
+        {
+          connectionHandler ( conn, ri );
+          return "";
+        }
+      else if ( strcmp ( ri->uri, "/envelope" ) == 0 )
         {
           envelopeHandler ( conn, ri );
           return "";
@@ -72,6 +78,35 @@ static void *httpCallback ( enum mg_event event, struct mg_connection *conn )
   return NULL;
 }
 
+void connectionHandler ( struct mg_connection *conn, const struct mg_request_info *ri )
+{
+
+  if ( strcmp ( ri->request_method, "GET" ) == 0 )
+    {
+      int i, len;
+      int num_ports = searchPorts ( seq_handle );
+      
+      char *json;
+      char json_object[50];
+      
+      json = malloc ( ( ( sizeof ( char ) * 50 ) * num_ports ) + 2 );
+      json[0] = '[';
+
+      for ( i = 0; i < num_ports; i++ )
+        {
+          sprintf ( json_object, "{\"%d:%d\": \"%s\"},", inputs[i].client, 
+                    inputs[i].port, inputs[i].name );
+          json = strcat ( json, json_object );
+        }
+      len = strlen ( json );
+      json[len - 1] = ']';
+      writeResponse ( conn, "200 OK", json );
+      free ( json );
+    }
+  else if ( strcmp ( ri->request_method, "PUT" ) == 0 )
+    {
+    }
+}
 void envelopeHandler ( struct mg_connection *conn, const struct mg_request_info *ri )
 {
 

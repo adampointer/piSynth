@@ -48,6 +48,8 @@ unsigned int initServer();
 ///
 static void *httpCallback ( enum mg_event event, struct mg_connection *conn );
 
+void connectionHandler ( struct mg_connection *conn, const struct mg_request_info *ri );
+
 ///
 /// Processes requests made to the envelope endpoint
 ///
