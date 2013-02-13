@@ -94,6 +94,8 @@ unsigned int run_worker;
 ///
 struct mg_context *ctx;
 
+struct mg_callbacks callbacks;
+
 ///
 /// Try to clean up as much as possible before quitting
 ///

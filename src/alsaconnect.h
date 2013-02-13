@@ -25,17 +25,39 @@
 
 #define INITIAL_INPUTS 5
 
+///
+/// An input port
+///
+/// \typedef
+/// \struct
+///
 typedef struct {
-    int client;
-    int port;
-    char *name;
+    int client; ///> Client number XXX:yy
+    int port;   ///> Port number xxx:YY
+    char *name; ///> Port name
 } input_t;
 
+///
+/// Store an array on input_t
+//
 input_t* inputs;
 
-
+///
+/// Find ports and write to the inputs structure
+///
+/// \param *seq Sequencer handle
+///
+/// \return unsigned int
+///
 unsigned int searchPorts ( snd_seq_t *seq );
 
+///
+/// Do we have an input port?
+///
+/// \param *pinfo Port info structure
+///
+/// \return unsigned int
+///
 unsigned int isInput ( snd_seq_port_info_t *pinfo );
 
 #endif //ALSACONNECT_H

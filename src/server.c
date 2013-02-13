@@ -37,45 +37,43 @@ unsigned int initServer()
     "document_root", DOCUMENT_ROOT,
     NULL
   };
-  ctx = mg_start ( &httpCallback, NULL, options );
+  memset ( &callbacks, 0, sizeof ( callbacks ) );
+  callbacks.begin_request = httpCallback;
+  ctx = mg_start ( &callbacks, NULL, options );
   return ( TRUE );
 }
 
-static void *httpCallback ( enum mg_event event, struct mg_connection *conn )
+static int httpCallback ( struct mg_connection *conn )
 {
   const struct mg_request_info *ri = mg_get_request_info ( conn );
   int arg_1;
 
-  if ( event == MG_NEW_REQUEST )
+  if ( strcmp ( ri->uri, "/connect" ) == 0 )
     {
-
-      if ( strcmp ( ri->uri, "/connect" ) == 0 )
-        {
-          connectionHandler ( conn, ri );
-          return "";
-        }
-      else if ( strcmp ( ri->uri, "/envelope" ) == 0 )
-        {
-          envelopeHandler ( conn, ri );
-          return "";
-        }
-      else if ( sscanf ( ri->uri, "/modulator/%d", &arg_1 ) == 1 )
-        {
-          modulatorHandler ( conn, ri, arg_1 );
-          return "";
-        }
-      else if ( strcmp ( ri->uri, "/carrier" ) == 0 )
-        {
-          carrierHandler ( conn, ri );
-          return "";
-        }
-      else if ( strcmp ( ri->uri, "/filter" ) == 0 )
-        {
-          filterHandler ( conn, ri );
-          return "";
-        }
+      connectionHandler ( conn, ri );
+      return TRUE;
     }
-  return NULL;
+  else if ( strcmp ( ri->uri, "/envelope" ) == 0 )
+    {
+      envelopeHandler ( conn, ri );
+      return TRUE;
+    }
+  else if ( sscanf ( ri->uri, "/modulator/%d", &arg_1 ) == 1 )
+    {
+      modulatorHandler ( conn, ri, arg_1 );
+      return TRUE;
+    }
+  else if ( strcmp ( ri->uri, "/carrier" ) == 0 )
+    {
+      carrierHandler ( conn, ri );
+      return TRUE;
+    }
+  else if ( strcmp ( ri->uri, "/filter" ) == 0 )
+    {
+      filterHandler ( conn, ri );
+      return TRUE;
+    }
+  return FALSE;
 }
 
 void connectionHandler ( struct mg_connection *conn, const struct mg_request_info *ri )

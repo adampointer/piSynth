@@ -43,11 +43,16 @@ unsigned int initServer();
 ///
 /// Fired on an HTTP event
 ///
-/// \param event  Event type
 /// \param *conn  HTTP connection
 ///
-static void *httpCallback ( enum mg_event event, struct mg_connection *conn );
+static int httpCallback ( struct mg_connection *conn );
 
+///
+/// Processes requests made to the connection endpoint
+///
+/// \param *conn HTTP connection
+/// \param *ri   Request info
+///
 void connectionHandler ( struct mg_connection *conn, const struct mg_request_info *ri );
 
 ///
